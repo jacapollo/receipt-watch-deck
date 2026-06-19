@@ -179,7 +179,7 @@ export function StatTile({
   value: string | number;
   sub?: string;
   icon?: LucideIcon;
-  tone?: "default" | "amber" | "cyan" | "green" | "red";
+  tone?: "default" | "amber" | "cyan" | "green" | "red" | "yellow";
 }) {
   const toneClass = {
     default: "text-foreground",
@@ -187,6 +187,7 @@ export function StatTile({
     cyan: "text-cyan",
     green: "text-status-green",
     red: "text-status-red",
+    yellow: "text-status-yellow",
   }[tone];
   return (
     <div className="border border-border bg-surface rounded-sm p-3 md:p-4 relative overflow-hidden">
