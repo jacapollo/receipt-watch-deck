@@ -28,10 +28,9 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
       {/* HUD background */}
-      <div className="absolute inset-0 hud-grid opacity-60" />
-      <div className="absolute inset-0 hud-scanlines pointer-events-none" />
-      <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-amber/10 blur-[160px]" />
-      <div className="absolute -bottom-40 -right-40 h-[480px] w-[480px] rounded-full bg-cyan/10 blur-[160px]" />
+      <div className="absolute inset-0 hud-grid" />
+      <div className="absolute inset-0 bg-black/60 z-0" />
+      <div className="absolute inset-0 hud-scanlines pointer-events-none z-10" />
 
       {/* Top bar */}
       <header className="relative z-10 flex items-center justify-between px-6 md:px-10 py-5 border-b border-border/50">
