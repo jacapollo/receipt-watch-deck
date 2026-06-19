@@ -48,36 +48,44 @@
 
 :root,
 .dark {
-  --background: #0a0c10;
-  --foreground: #e6e9ef;
-  --surface: #151921;
-  --surface-2: #1c2230;
-  --card: #151921;
-  --card-foreground: #e6e9ef;
-  --popover: #151921;
-  --popover-foreground: #e6e9ef;
-  --primary: #f5a623;
-  --primary-foreground: #0a0c10;
-  --secondary: #1c2230;
-  --secondary-foreground: #e6e9ef;
-  --muted: #1c2230;
-  --muted-foreground: #8b95a5;
-  --accent: #2bd4d9;
-  --accent-foreground: #0a0c10;
-  --destructive: #f85149;
-  --destructive-foreground: #ffffff;
-  --border: #232a34;
-  --input: #232a34;
-  --ring: #f5a623;
+  /* Monochrome ops palette — black / gray / white only */
+  --background: #050505;
+  --foreground: #f2f2f2;
+  --surface: #0e0e0e;
+  --surface-2: #181818;
+  --card: #0e0e0e;
+  --card-foreground: #f2f2f2;
+  --popover: #0e0e0e;
+  --popover-foreground: #f2f2f2;
 
-  --amber: #f5a623;
-  --cyan: #2bd4d9;
-  --status-green: #3fb950;
-  --status-red: #f85149;
-  --status-yellow: #d29922;
-  --party-dem: #4f8ef7;
-  --party-rep: #f85149;
-  --party-ind: #d29922;
+  /* "Primary" accent is now pure white — used for active states, headings, key UI */
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+
+  --secondary: #181818;
+  --secondary-foreground: #f2f2f2;
+  --muted: #181818;
+  --muted-foreground: #7a7a7a;
+
+  /* "Accent" — soft off-white for secondary highlights */
+  --accent: #d4d4d4;
+  --accent-foreground: #000000;
+
+  --destructive: #ffffff;
+  --destructive-foreground: #000000;
+  --border: #262626;
+  --input: #262626;
+  --ring: #ffffff;
+
+  /* Token names preserved for component compatibility — all mapped to grays/whites */
+  --amber: #ffffff;
+  --cyan: #c9c9c9;
+  --status-green: #ededed;
+  --status-red: #ffffff;
+  --status-yellow: #8a8a8a;
+  --party-dem: #ffffff;
+  --party-rep: #6e6e6e;
+  --party-ind: #a3a3a3;
 }
 
 html {
@@ -97,11 +105,20 @@ html {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* HUD grid background */
+  /* Tactical USA map background — replaces the old HUD grid */
   .hud-grid {
+    background-color: #050505;
+    background-image: url("/tactical-usa.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* For surfaces that just want a faint tiled grid (cards, map panels) */
+  .hud-grid-faint {
     background-image:
-      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 
@@ -110,8 +127,8 @@ html {
       to bottom,
       transparent 0px,
       transparent 2px,
-      rgba(43, 212, 217, 0.025) 2px,
-      rgba(43, 212, 217, 0.025) 3px
+      rgba(255, 255, 255, 0.025) 2px,
+      rgba(255, 255, 255, 0.025) 3px
     );
   }
 
@@ -123,7 +140,6 @@ html {
     color: var(--color-muted-foreground);
   }
 
-  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
