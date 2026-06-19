@@ -72,9 +72,9 @@ function Landing() {
           </span>
         </h1>
 
-        <p className="mt-6 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
+        <p className="mt-6 max-w-2xl text-base md:text-lg text-white leading-relaxed font-medium drop-shadow">
           A live operations dashboard for local, state, and federal officials —
-          built from <span className="text-foreground font-semibold">public records only</span>.
+          built from <span className="font-bold">public records only</span>.
           Their votes, their donors, their words. On the record.
         </p>
 
