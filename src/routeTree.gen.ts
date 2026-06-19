@@ -9,38 +9,186 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as OfficialsRouteImport } from './routes/officials'
+import { Route as MapRouteImport } from './routes/map'
+import { Route as FeedRouteImport } from './routes/feed'
+import { Route as DiscussRouteImport } from './routes/discuss'
+import { Route as BillsRouteImport } from './routes/bills'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OfficialsIdRouteImport } from './routes/officials.$id'
+import { Route as DiscussIdRouteImport } from './routes/discuss.$id'
 
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfficialsRoute = OfficialsRouteImport.update({
+  id: '/officials',
+  path: '/officials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedRoute = FeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscussRoute = DiscussRouteImport.update({
+  id: '/discuss',
+  path: '/discuss',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillsRoute = BillsRouteImport.update({
+  id: '/bills',
+  path: '/bills',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OfficialsIdRoute = OfficialsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OfficialsRoute,
+} as any)
+const DiscussIdRoute = DiscussIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DiscussRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bills': typeof BillsRoute
+  '/discuss': typeof DiscussRouteWithChildren
+  '/feed': typeof FeedRoute
+  '/map': typeof MapRoute
+  '/officials': typeof OfficialsRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/discuss/$id': typeof DiscussIdRoute
+  '/officials/$id': typeof OfficialsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bills': typeof BillsRoute
+  '/discuss': typeof DiscussRouteWithChildren
+  '/feed': typeof FeedRoute
+  '/map': typeof MapRoute
+  '/officials': typeof OfficialsRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/discuss/$id': typeof DiscussIdRoute
+  '/officials/$id': typeof OfficialsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bills': typeof BillsRoute
+  '/discuss': typeof DiscussRouteWithChildren
+  '/feed': typeof FeedRoute
+  '/map': typeof MapRoute
+  '/officials': typeof OfficialsRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/discuss/$id': typeof DiscussIdRoute
+  '/officials/$id': typeof OfficialsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/bills'
+    | '/discuss'
+    | '/feed'
+    | '/map'
+    | '/officials'
+    | '/profile'
+    | '/discuss/$id'
+    | '/officials/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/bills'
+    | '/discuss'
+    | '/feed'
+    | '/map'
+    | '/officials'
+    | '/profile'
+    | '/discuss/$id'
+    | '/officials/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/bills'
+    | '/discuss'
+    | '/feed'
+    | '/map'
+    | '/officials'
+    | '/profile'
+    | '/discuss/$id'
+    | '/officials/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BillsRoute: typeof BillsRoute
+  DiscussRoute: typeof DiscussRouteWithChildren
+  FeedRoute: typeof FeedRoute
+  MapRoute: typeof MapRoute
+  OfficialsRoute: typeof OfficialsRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/officials': {
+      id: '/officials'
+      path: '/officials'
+      fullPath: '/officials'
+      preLoaderRoute: typeof OfficialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feed': {
+      id: '/feed'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discuss': {
+      id: '/discuss'
+      path: '/discuss'
+      fullPath: '/discuss'
+      preLoaderRoute: typeof DiscussRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bills': {
+      id: '/bills'
+      path: '/bills'
+      fullPath: '/bills'
+      preLoaderRoute: typeof BillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +196,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/officials/$id': {
+      id: '/officials/$id'
+      path: '/$id'
+      fullPath: '/officials/$id'
+      preLoaderRoute: typeof OfficialsIdRouteImport
+      parentRoute: typeof OfficialsRoute
+    }
+    '/discuss/$id': {
+      id: '/discuss/$id'
+      path: '/$id'
+      fullPath: '/discuss/$id'
+      preLoaderRoute: typeof DiscussIdRouteImport
+      parentRoute: typeof DiscussRoute
+    }
   }
 }
 
+interface DiscussRouteChildren {
+  DiscussIdRoute: typeof DiscussIdRoute
+}
+
+const DiscussRouteChildren: DiscussRouteChildren = {
+  DiscussIdRoute: DiscussIdRoute,
+}
+
+const DiscussRouteWithChildren =
+  DiscussRoute._addFileChildren(DiscussRouteChildren)
+
+interface OfficialsRouteChildren {
+  OfficialsIdRoute: typeof OfficialsIdRoute
+}
+
+const OfficialsRouteChildren: OfficialsRouteChildren = {
+  OfficialsIdRoute: OfficialsIdRoute,
+}
+
+const OfficialsRouteWithChildren = OfficialsRoute._addFileChildren(
+  OfficialsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BillsRoute: BillsRoute,
+  DiscussRoute: DiscussRouteWithChildren,
+  FeedRoute: FeedRoute,
+  MapRoute: MapRoute,
+  OfficialsRoute: OfficialsRouteWithChildren,
+  ProfileRoute: ProfileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
