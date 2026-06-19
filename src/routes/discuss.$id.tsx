@@ -57,7 +57,7 @@ function ThreadPage() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-2">
-                {thread.tags.map((tg) => (
+                {thread.tags.map((tg: string) => (
                   <span
                     key={tg}
                     className="font-mono text-[10px] uppercase tracking-widest text-cyan border border-cyan/40 px-1.5 py-0.5 rounded-[2px]"
@@ -105,7 +105,7 @@ function ThreadPage() {
         <div className="mt-6">
           <div className="mono-label mb-3">{thread.comments.length} REPLIES</div>
           <ul className="space-y-3">
-            {thread.comments.map((c) => (
+            {thread.comments.map((c: Comment) => (
               <CommentItem key={c.id} comment={c} depth={0} />
             ))}
             {thread.comments.length === 0 && (
