@@ -38,7 +38,7 @@ function MapPage() {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-          <div className="relative border border-border bg-surface rounded-sm overflow-hidden hud-grid">
+          <div className="relative border border-border bg-surface rounded-sm overflow-hidden hud-grid-faint">
             <div className="absolute top-3 left-3 mono-label text-amber z-10">
               SECTOR · NORTH AMERICA (DEMO)
             </div>
