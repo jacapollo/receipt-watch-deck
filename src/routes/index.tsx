@@ -26,11 +26,15 @@ function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* HUD background */}
-      <div className="absolute inset-0 hud-grid" />
-      <div className="absolute inset-0 bg-black/60 z-0" />
-      <div className="absolute inset-0 hud-scanlines pointer-events-none z-10" />
+    <div className="min-h-screen text-foreground relative overflow-hidden bg-black">
+      {/* Tactical USA map background */}
+      <div
+        className="fixed inset-0 z-0 bg-center bg-cover bg-no-repeat"
+        style={{ backgroundImage: "url('/tactical-usa.jpg')" }}
+      />
+      <div className="fixed inset-0 z-0 bg-black/40" />
+      <div className="fixed inset-0 hud-scanlines pointer-events-none z-[1] opacity-40" />
+
 
       {/* Top bar */}
       <header className="relative z-10 flex items-center justify-between px-6 md:px-10 py-5 border-b border-border/50">
