@@ -45,11 +45,11 @@ function Landing() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-6 font-mono text-[13px] uppercase tracking-widest text-white font-semibold">
-          <Link to="/feed" className="hover:text-amber">Feed</Link>
-          <Link to="/map" className="hover:text-amber">Map</Link>
-          <Link to="/officials" className="hover:text-amber">Officials</Link>
-          <Link to="/bills" className="hover:text-amber">Bills</Link>
-          <Link to="/discuss" className="hover:text-amber">Discuss</Link>
+          <Link to="/feed" className="hover:text-amber underline underline-offset-4">Feed</Link>
+          <Link to="/map" className="hover:text-amber underline underline-offset-4">Map</Link>
+          <Link to="/officials" className="hover:text-amber underline underline-offset-4">Officials</Link>
+          <Link to="/bills" className="hover:text-amber underline underline-offset-4">Bills</Link>
+          <Link to="/discuss" className="hover:text-amber underline underline-offset-4">Discuss</Link>
         </div>
         <Link
           to="/feed"
