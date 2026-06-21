@@ -44,7 +44,7 @@ function Landing() {
             POLY<span className="text-amber">SNITCH</span>
           </span>
         </div>
-        <div className="hidden md:flex items-center gap-6 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+        <div className="hidden md:flex items-center gap-6 font-mono text-[13px] uppercase tracking-widest text-white font-semibold">
           <Link to="/feed" className="hover:text-amber">Feed</Link>
           <Link to="/map" className="hover:text-amber">Map</Link>
           <Link to="/officials" className="hover:text-amber">Officials</Link>
