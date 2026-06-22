@@ -44,7 +44,7 @@ function Landing() {
             POLY<span className="text-amber">SNITCH</span>
           </span>
         </div>
-        <div className="hidden md:flex items-center gap-4 font-mono text-[12px] uppercase tracking-widest text-white font-bold">
+        <div className="hidden md:flex items-center gap-8 font-mono text-[12px] uppercase tracking-widest text-white font-bold">
           <Link to="/feed" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Feed</Link>
           <Link to="/map" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Map</Link>
           <Link to="/officials" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Officials</Link>
