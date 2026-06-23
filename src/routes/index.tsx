@@ -67,7 +67,7 @@ function Landing() {
         </div>
         <h1 className="mt-4 text-5xl md:text-8xl font-black tracking-tight leading-[0.95]">
           POLY<span className="text-amber">SNITCH</span>
-          <span className="block text-foreground/90 text-2xl md:text-4xl font-bold mt-2 tracking-tight">
+          <span className="block text-foreground/65 text-2xl md:text-4xl font-bold mt-2 tracking-tight">
             Track them the way they track you.
           </span>
         </h1>
