@@ -48,7 +48,7 @@
 
 :root,
 .dark {
-  /* Monochrome ops palette — black / gray / white only */
+  /* Monochrome ops palette â€” black / gray / white only */
   --background: #050505;
   --foreground: #f2f2f2;
   --surface: #0e0e0e;
@@ -58,16 +58,16 @@
   --popover: #0e0e0e;
   --popover-foreground: #f2f2f2;
 
-  /* "Primary" accent is now pure white — used for active states, headings, key UI */
+  /* "Primary" accent is now pure white â€” used for active states, headings, key UI */
   --primary: #ffffff;
   --primary-foreground: #000000;
 
   --secondary: #181818;
   --secondary-foreground: #f2f2f2;
   --muted: #181818;
-  --muted-foreground: #7a7a7a;
+  --muted-foreground: #a6a6a6;
 
-  /* "Accent" — soft off-white for secondary highlights */
+  /* "Accent" â€” soft off-white for secondary highlights */
   --accent: #d4d4d4;
   --accent-foreground: #000000;
 
@@ -77,15 +77,16 @@
   --input: #262626;
   --ring: #ffffff;
 
-  /* Token names preserved for component compatibility — all mapped to grays/whites */
-  --amber: #ffffff;
-  --cyan: #c9c9c9;
-  --status-green: #ededed;
-  --status-red: #ffffff;
-  --status-yellow: #8a8a8a;
-  --party-dem: #ffffff;
-  --party-rep: #6e6e6e;
-  --party-ind: #a3a3a3;
+  /* Chrome stays monochrome; semantic tokens carry a disciplined, muted-tactical
+     color so party, vote, and bill outcomes read at a glance. */
+  --amber: #ffffff;         /* primary accent â€” intentionally white (monochrome chrome) */
+  --cyan: #c9c9c9;          /* secondary accent â€” soft gray */
+  --status-green: #57b98a;  /* positive: Yea / Signed / passed / live */
+  --status-red: #e05951;    /* negative: Nay / Failed / report / alert */
+  --status-yellow: #d3a24c; /* caution: In Committee / Present / pending */
+  --party-dem: #5b86c4;     /* Democratic â€” muted steel blue */
+  --party-rep: #d2615a;     /* Republican â€” muted brick red */
+  --party-ind: #9b86c0;     /* Independent â€” muted violet */
 }
 
 html {
@@ -105,7 +106,7 @@ html {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Tactical USA map background — replaces the old HUD grid */
+  /* Tactical USA map background â€” replaces the old HUD grid */
   .hud-grid {
     background-color: #050505;
     background-image: url("/tactical-usa.jpg");
