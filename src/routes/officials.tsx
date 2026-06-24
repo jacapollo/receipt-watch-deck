@@ -15,7 +15,7 @@ export const Route = createFileRoute("/officials")({
   head: () => ({
     meta: [
       { title: "Officials · PolySnitch" },
-      { name: "description", content: "Browse officials and open their dossier." },
+      { name: "description", content: "Browse officials and open their public record." },
     ],
   }),
   component: OfficialsPage,
@@ -42,9 +42,9 @@ function OfficialsPage() {
     <AppShell>
       <div className="px-4 md:px-8 py-8 max-w-[1600px] mx-auto">
         <SectionHeader
-          eyebrow="ROSTER // SUBJECTS"
+          eyebrow="DIRECTORY // OFFICIALS"
           title="Officials"
-          right={<span className="mono-label hidden md:inline">{list.length} SUBJECTS</span>}
+          right={<span className="mono-label hidden md:inline">{list.length} OFFICIALS</span>}
         />
 
         <div className="flex flex-wrap items-center gap-3 mb-6">

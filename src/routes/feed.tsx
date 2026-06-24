@@ -18,7 +18,7 @@ import { TrendingUp, MessageSquare } from "lucide-react";
 export const Route = createFileRoute("/feed")({
   head: () => ({
     meta: [
-      { title: "Feed · PolySnitch Watchfloor" },
+      { title: "Feed · PolySnitch" },
       { name: "description", content: "Live feed of public actions by officials in your area." },
     ],
   }),
@@ -39,7 +39,7 @@ function FeedPage() {
     <AppShell>
       <div className="px-4 md:px-8 py-8 max-w-[1600px] mx-auto">
         <SectionHeader
-          eyebrow="WATCHFLOOR // LIVE"
+          eyebrow="LIVE // PUBLIC RECORD"
           title="Feed"
           right={
             <span className="mono-label hidden md:inline">

@@ -27,7 +27,7 @@ function NotFoundComponent() {
             to="/"
             className="inline-flex items-center justify-center rounded-sm bg-amber px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground transition hover:brightness-110"
           >
-            Return to watchfloor
+            Return to the feed
           </Link>
         </div>
       </div>
@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PolySnitch — Track them the way they track you" },
+      { title: "PolySnitch — Public officials, on the record" },
       {
         name: "description",
         content:
@@ -87,11 +87,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "PolySnitch" },
       { name: "theme-color", content: "#0a0c10" },
-      { property: "og:title", content: "PolySnitch — Track them the way they track you" },
+      { property: "og:title", content: "PolySnitch — Public officials, on the record" },
       {
         property: "og:description",
         content:
-          "An intelligence-dashboard for political accountability. Built on public records.",
+          "A clear dashboard for political accountability. Built on public records.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
