@@ -5,16 +5,16 @@ import { ArrowRight, Radar, FileText, DollarSign, ShieldCheck } from "lucide-rea
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PolySnitch — Track them the way they track you" },
+      { title: "PolySnitch — Public officials, on the record" },
       {
         name: "description",
         content:
-          "An intelligence-dashboard for political accountability. Public records. Real funding. No spin.",
+          "A clear dashboard for political accountability. Public records, real funding, no spin.",
       },
-      { property: "og:title", content: "PolySnitch — Track them the way they track you" },
+      { property: "og:title", content: "PolySnitch — Public officials, on the record" },
       {
         property: "og:description",
-        content: "Track local, state, and federal officials using only public records.",
+        content: "Follow the public record of local, state, and federal officials.",
       },
     ],
   }),
