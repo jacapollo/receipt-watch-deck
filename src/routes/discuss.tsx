@@ -26,7 +26,7 @@ function DiscussPage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1400px] mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-[1400px] mx-auto">
         <SectionHeader
           eyebrow="COMMUNITY // ANONYMOUS"
           title="Discuss"
@@ -41,7 +41,7 @@ function DiscussPage() {
           }
         />
 
-        <div className="flex items-center gap-2 flex-wrap mb-5">
+        <div className="flex items-center gap-2 flex-wrap mb-6">
           <span className="mono-label mr-1">FILTER</span>
           <button
             onClick={() => setTag(null)}
@@ -66,9 +66,9 @@ function DiscussPage() {
           ))}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {list.map((t) => (
-            <article key={t.id} className="border border-border bg-surface rounded-sm p-4 hover:border-amber/40 transition">
+            <article key={t.id} className="border border-border bg-surface rounded-sm p-5 hover:border-amber/40 transition">
               <div className="flex gap-3">
                 <div className="flex flex-col items-center gap-0.5 shrink-0 font-mono">
                   <ArrowBigUp className="h-5 w-5 text-muted-foreground hover:text-amber cursor-pointer" />

@@ -37,7 +37,7 @@ function FeedPage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1600px] mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-[1600px] mx-auto">
         <SectionHeader
           eyebrow="WATCHFLOOR // LIVE"
           title="Feed"
@@ -48,12 +48,12 @@ function FeedPage() {
           }
         />
 
-        <div className="mb-5">
+        <div className="mb-6">
           <LevelFilterBar value={level} onChange={setLevel} location="San Vicente, CA · CA-12" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          <div className="space-y-3 min-w-0">
+          <div className="space-y-4 min-w-0">
             {filtered.slice(0, 40).map((a) => {
               const o = getOfficial(a.officialId)!;
               return <ActionCard key={a.id} action={a} official={o} />;
@@ -62,7 +62,7 @@ function FeedPage() {
 
           {/* Right rail (desktop) */}
           <aside className="hidden lg:block space-y-6">
-            <div className="border border-border bg-surface rounded-sm p-4">
+            <div className="border border-border bg-surface rounded-sm p-5">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="h-3.5 w-3.5 text-amber" />
                 <span className="mono-label text-amber">TRENDING IN YOUR DISTRICT</span>
@@ -103,7 +103,7 @@ function FeedPage() {
               </ul>
             </div>
 
-            <div className="border border-border bg-surface rounded-sm p-4">
+            <div className="border border-border bg-surface rounded-sm p-5">
               <div className="mono-label text-cyan mb-3">MOST-FUNDED NEAR YOU</div>
               <ol className="space-y-2">
                 {topFunded.map((f, i) => {

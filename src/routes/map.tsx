@@ -26,7 +26,7 @@ function MapPage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1600px] mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-[1600px] mx-auto">
         <SectionHeader
           eyebrow="GEO // DISTRICT EXPLORER"
           title="Map"
@@ -37,7 +37,7 @@ function MapPage() {
           }
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
           <div className="relative border border-border rounded-sm overflow-hidden hud-grid">
             <div className="absolute inset-0 bg-black/60 z-0" />
             <div className="absolute top-3 left-3 mono-label text-amber z-10">
@@ -126,7 +126,7 @@ function MapPage() {
           </div>
 
           {/* District panel */}
-          <aside className="border border-border bg-surface rounded-sm p-4 min-h-[400px]">
+          <aside className="border border-border bg-surface rounded-sm p-5 min-h-[400px]">
             {!district && (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
                 <div className="mono-label text-amber">NO DISTRICT SELECTED</div>

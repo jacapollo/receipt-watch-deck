@@ -48,14 +48,14 @@ function BillsPage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1400px] mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-[1400px] mx-auto">
         <SectionHeader
           eyebrow="LEGISLATION // TRACKER"
           title="Bills & Issues"
           right={<span className="mono-label hidden md:inline">{list.length} BILLS</span>}
         />
 
-        <div className="space-y-3 mb-5">
+        <div className="space-y-3 mb-6">
           <LevelFilterBar value={level} onChange={setLevel} />
           <div className="flex items-center gap-2 flex-wrap">
             <span className="mono-label mr-1">TAGS</span>
@@ -83,7 +83,7 @@ function BillsPage() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {list.map((b) => {
             const isOpen = open === b.id;
             const isFollowed = followed.has(b.id);
@@ -92,7 +92,7 @@ function BillsPage() {
                 key={b.id}
                 className="border border-border bg-surface rounded-sm overflow-hidden"
               >
-                <div className="p-4 md:p-5">
+                <div className="p-5">
                   <div className="flex items-start gap-3">
                     <button
                       onClick={() => setOpen(isOpen ? null : b.id)}
@@ -135,7 +135,7 @@ function BillsPage() {
                 </div>
 
                 {isOpen && (
-                  <div className="border-t border-border bg-surface-2/40 p-4 md:p-5 space-y-4">
+                  <div className="border-t border-border bg-surface-2/40 p-5 space-y-4">
                     <div>
                       <div className="mono-label text-amber mb-2">SPONSORS</div>
                       <div className="flex flex-wrap gap-2">
