@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import {
+  LayoutDashboard,
   Radio,
   Map,
   Users,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 const nav = [
+  { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/feed", label: "Feed", icon: Radio },
   { to: "/map", label: "Map", icon: Map },
   { to: "/officials", label: "Officials", icon: Users },
@@ -18,6 +20,10 @@ const nav = [
   { to: "/discuss", label: "Discuss", icon: MessagesSquare },
   { to: "/profile", label: "Profile", icon: UserCircle2 },
 ] as const;
+
+// Mobile bottom nav: keep room for all primary sections by moving Profile
+// to the desktop sidebar / top-level only.
+const mobileNav = nav.filter((n) => n.to !== "/profile");
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -77,17 +83,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Radar className="h-4 w-4 text-amber" />
           <span className="font-black text-sm tracking-tight">POLY<span className="text-amber">SNITCH</span></span>
         </Link>
-        <div className="mono-label text-status-green flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-status-green animate-pulse" />
-          LIVE
-        </div>
+        <Link
+          to="/profile"
+          className="mono-label text-muted-foreground hover:text-amber flex items-center gap-1.5"
+        >
+          <UserCircle2 className="h-3.5 w-3.5" />
+          PROFILE
+        </Link>
       </div>
 
       <main className="flex-1 min-w-0 pt-12 md:pt-0 pb-20 md:pb-0">{children}</main>
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 h-20 border-t border-border bg-surface grid grid-cols-6 pb-[env(safe-area-inset-bottom)]">
-        {nav.map((item) => {
+        {mobileNav.map((item) => {
           const active = pathname === item.to || pathname.startsWith(item.to + "/");
           const Icon = item.icon;
           return (

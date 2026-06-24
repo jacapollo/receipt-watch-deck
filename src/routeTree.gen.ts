@@ -14,6 +14,7 @@ import { Route as OfficialsRouteImport } from './routes/officials'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DiscussRouteImport } from './routes/discuss'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BillsRouteImport } from './routes/bills'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OfficialsIdRouteImport } from './routes/officials.$id'
@@ -44,6 +45,11 @@ const DiscussRoute = DiscussRouteImport.update({
   path: '/discuss',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BillsRoute = BillsRouteImport.update({
   id: '/bills',
   path: '/bills',
@@ -68,6 +74,7 @@ const DiscussIdRoute = DiscussIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bills': typeof BillsRoute
+  '/dashboard': typeof DashboardRoute
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
   '/map': typeof MapRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bills': typeof BillsRoute
+  '/dashboard': typeof DashboardRoute
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
   '/map': typeof MapRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bills': typeof BillsRoute
+  '/dashboard': typeof DashboardRoute
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
   '/map': typeof MapRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/bills'
+    | '/dashboard'
     | '/discuss'
     | '/feed'
     | '/map'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/bills'
+    | '/dashboard'
     | '/discuss'
     | '/feed'
     | '/map'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/bills'
+    | '/dashboard'
     | '/discuss'
     | '/feed'
     | '/map'
@@ -138,6 +150,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BillsRoute: typeof BillsRoute
+  DashboardRoute: typeof DashboardRoute
   DiscussRoute: typeof DiscussRouteWithChildren
   FeedRoute: typeof FeedRoute
   MapRoute: typeof MapRoute
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/discuss'
       fullPath: '/discuss'
       preLoaderRoute: typeof DiscussRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bills': {
@@ -239,6 +259,7 @@ const OfficialsRouteWithChildren = OfficialsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BillsRoute: BillsRoute,
+  DashboardRoute: DashboardRoute,
   DiscussRoute: DiscussRouteWithChildren,
   FeedRoute: FeedRoute,
   MapRoute: MapRoute,
