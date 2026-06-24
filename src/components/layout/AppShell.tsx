@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Radar className="h-5 w-5 text-amber group-hover:rotate-45 transition-transform" />
             <span className="font-black text-lg tracking-tight">POLY<span className="text-amber">SNITCH</span></span>
           </div>
-          <div className="mono-label mt-1">v0.1 // watchfloor</div>
+          <div className="mono-label mt-1">v0.1 // public record</div>
         </Link>
 
         <nav className="flex-1 px-2 py-4 space-y-1">

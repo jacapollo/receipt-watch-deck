@@ -36,24 +36,24 @@ export const Route = createFileRoute("/officials/$id")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.official.name ?? "Dossier"} · PolySnitch` },
+      { title: `${loaderData?.official.name ?? "Profile"} · PolySnitch` },
       {
         name: "description",
-        content: `Public-record dossier: votes, bills, funding, and discussion for ${loaderData?.official.name}.`,
+        content: `Public record: votes, bills, funding, and discussion for ${loaderData?.official.name}.`,
       },
     ],
   }),
   errorComponent: ({ error }) => (
     <AppShell>
-      <div className="p-8">Error loading dossier: {error.message}</div>
+      <div className="p-8">Error loading record: {error.message}</div>
     </AppShell>
   ),
   notFoundComponent: () => (
     <AppShell>
       <div className="p-8">
-        <p className="mono-label text-amber">404 · UNKNOWN SUBJECT</p>
+        <p className="mono-label text-amber">404 · OFFICIAL NOT FOUND</p>
         <Link to="/officials" className="text-amber hover:underline mt-2 inline-block">
-          ← Back to roster
+          ← Back to officials
         </Link>
       </div>
     </AppShell>
@@ -84,15 +84,15 @@ function DossierPage() {
           to="/officials"
           className="inline-flex items-center gap-1.5 mono-label text-muted-foreground hover:text-amber mb-6"
         >
-          <ArrowLeft className="h-3 w-3" /> ROSTER
+          <ArrowLeft className="h-3 w-3" /> OFFICIALS
         </Link>
 
         {/* Case file header */}
         <div className="border border-border bg-surface rounded-sm p-5 relative overflow-hidden">
           <div className="absolute inset-0 hud-scanlines pointer-events-none opacity-50" />
-          <div className="absolute top-3 right-3 mono-label text-status-red flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-status-red animate-pulse" />
-            CASE FILE · OPEN
+          <div className="absolute top-3 right-3 mono-label text-muted-foreground flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-status-green animate-pulse" />
+            LIVE · PUBLIC RECORD
           </div>
 
           <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-5 items-start">

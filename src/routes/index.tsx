@@ -5,16 +5,16 @@ import { ArrowRight, Radar, FileText, DollarSign, ShieldCheck } from "lucide-rea
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PolySnitch — Track them the way they track you" },
+      { title: "PolySnitch — Public officials, on the record" },
       {
         name: "description",
         content:
-          "An intelligence-dashboard for political accountability. Public records. Real funding. No spin.",
+          "A clear dashboard for political accountability. Public records, real funding, no spin.",
       },
-      { property: "og:title", content: "PolySnitch — Track them the way they track you" },
+      { property: "og:title", content: "PolySnitch — Public officials, on the record" },
       {
         property: "og:description",
-        content: "Track local, state, and federal officials using only public records.",
+        content: "Follow the public record of local, state, and federal officials.",
       },
     ],
   }),
@@ -55,7 +55,7 @@ function Landing() {
           to="/feed"
           className="hidden md:inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-widest bg-amber text-primary-foreground px-3 py-2 rounded-sm hover:brightness-110"
         >
-          Enter watchfloor <ArrowRight className="h-3 w-3" />
+          Open the feed <ArrowRight className="h-3 w-3" />
         </Link>
       </header>
 
@@ -68,7 +68,7 @@ function Landing() {
         <h1 className="mt-4 text-5xl md:text-8xl font-black tracking-tight leading-[0.95]">
           POLY<span className="text-amber">SNITCH</span>
           <span className="block text-foreground/65 text-2xl md:text-4xl font-bold mt-2 tracking-tight">
-            Track them the way they track you.
+            The public record, without the spin.
           </span>
         </h1>
 
@@ -97,7 +97,7 @@ function Landing() {
             type="submit"
             className="shrink-0 inline-flex items-center gap-1 bg-amber text-primary-foreground font-bold uppercase tracking-wider text-xs px-4 py-2.5 rounded-sm hover:brightness-110"
           >
-            Show me who runs my area
+            See who represents my area
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </form>

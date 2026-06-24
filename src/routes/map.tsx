@@ -41,7 +41,7 @@ function MapPage() {
           <div className="relative border border-border rounded-sm overflow-hidden hud-grid">
             <div className="absolute inset-0 bg-black/60 z-0" />
             <div className="absolute top-3 left-3 mono-label text-amber z-10">
-              SECTOR · NORTH AMERICA (DEMO)
+              REGION · NORTH AMERICA (DEMO)
             </div>
             {activeState && (
               <button
@@ -133,7 +133,7 @@ function MapPage() {
                 <p className="mt-3 text-sm text-muted-foreground max-w-xs">
                   {activeState
                     ? "Tap a district on the map to see who represents it."
-                    : "Tap a state to drill in."}
+                    : "Tap a state to zoom in."}
                 </p>
               </div>
             )}
@@ -141,7 +141,7 @@ function MapPage() {
               <>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="mono-label text-cyan">DISTRICT DOSSIER</div>
+                    <div className="mono-label text-cyan">DISTRICT PROFILE</div>
                     <h3 className="text-lg font-bold mt-1">{district.name}</h3>
                     <div className="mono-label mt-1">
                       LEVEL · {district.level.toUpperCase()}
