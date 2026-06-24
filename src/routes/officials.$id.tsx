@@ -79,16 +79,16 @@ function DossierPage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1400px] mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-[1400px] mx-auto">
         <Link
           to="/officials"
-          className="inline-flex items-center gap-1.5 mono-label text-muted-foreground hover:text-amber mb-4"
+          className="inline-flex items-center gap-1.5 mono-label text-muted-foreground hover:text-amber mb-6"
         >
           <ArrowLeft className="h-3 w-3" /> ROSTER
         </Link>
 
         {/* Case file header */}
-        <div className="border border-border bg-surface rounded-sm p-5 md:p-6 relative overflow-hidden">
+        <div className="border border-border bg-surface rounded-sm p-5 relative overflow-hidden">
           <div className="absolute inset-0 hud-scanlines pointer-events-none opacity-50" />
           <div className="absolute top-3 right-3 mono-label text-status-red flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-status-red animate-pulse" />
@@ -128,7 +128,7 @@ function DossierPage() {
         </div>
 
         {/* Accountability snapshot */}
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatTile label="BILLS SPONSORED" value={official.stats.billsSponsored} icon={FileText} tone="amber" />
           <StatTile
             label="ATTENDANCE"
@@ -164,7 +164,7 @@ function DossierPage() {
         </div>
 
         {tab === "activity" && (
-          <div className="mt-5 space-y-3">
+          <div className="mt-6 space-y-4">
             {officialActions.map((a) => (
               <ActionCard key={a.id} action={a} official={official} />
             ))}
@@ -172,7 +172,7 @@ function DossierPage() {
         )}
 
         {tab === "funding" && (
-          <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="border border-border bg-surface rounded-sm p-5">
               <div className="mono-label text-amber">BY SECTOR · CYCLE TO DATE</div>
               <div className="mt-4 space-y-3">
@@ -227,7 +227,7 @@ function DossierPage() {
         )}
 
         {tab === "discussion" && (
-          <div className="mt-5 space-y-3">
+          <div className="mt-6 space-y-4">
             {officialThreads.length === 0 && (
               <div className="border border-dashed border-border rounded-sm p-8 text-center">
                 <div className="mono-label text-amber">NO THREADS YET</div>
@@ -237,7 +237,7 @@ function DossierPage() {
               </div>
             )}
             {officialThreads.map((t) => (
-              <article key={t.id} className="border border-border bg-surface rounded-sm p-4">
+              <article key={t.id} className="border border-border bg-surface rounded-sm p-5">
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center gap-0.5 shrink-0 font-mono">
                     <ArrowBigUp className="h-4 w-4 text-muted-foreground hover:text-amber cursor-pointer" />

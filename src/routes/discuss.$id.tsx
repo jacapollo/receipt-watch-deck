@@ -38,10 +38,10 @@ function ThreadPage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-3xl mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto">
         <Link
           to="/discuss"
-          className="inline-flex items-center gap-1.5 mono-label text-muted-foreground hover:text-amber mb-4"
+          className="inline-flex items-center gap-1.5 mono-label text-muted-foreground hover:text-amber mb-6"
         >
           <ArrowLeft className="h-3 w-3" /> DISCUSS
         </Link>
@@ -81,7 +81,7 @@ function ThreadPage() {
         </article>
 
         {/* Reply box */}
-        <div className="mt-5 border border-border bg-surface rounded-sm p-4">
+        <div className="mt-6 border border-border bg-surface rounded-sm p-5">
           <div className="mono-label text-amber mb-2">REPLY · ANONYMOUS</div>
           <textarea
             value={reply}
@@ -104,7 +104,7 @@ function ThreadPage() {
         {/* Comments */}
         <div className="mt-6">
           <div className="mono-label mb-3">{thread.comments.length} REPLIES</div>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {thread.comments.map((c: Comment) => (
               <CommentItem key={c.id} comment={c} depth={0} />
             ))}

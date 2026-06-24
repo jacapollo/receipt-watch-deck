@@ -40,14 +40,14 @@ function OfficialsPage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1600px] mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-[1600px] mx-auto">
         <SectionHeader
           eyebrow="ROSTER // SUBJECTS"
           title="Officials"
           right={<span className="mono-label hidden md:inline">{list.length} SUBJECTS</span>}
         />
 
-        <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="flex flex-wrap items-center gap-3 mb-6">
           <LevelFilterBar value={level} onChange={setLevel} />
           <div className="flex items-center gap-2 border border-border bg-surface rounded-sm px-3 py-1.5 flex-1 min-w-[200px] max-w-md focus-within:border-amber">
             <Search className="h-3.5 w-3.5 text-muted-foreground" />
@@ -60,13 +60,13 @@ function OfficialsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {list.map((o) => (
             <Link
               key={o.id}
               to="/officials/$id"
               params={{ id: o.id }}
-              className="group border border-border bg-surface hover:border-amber/60 rounded-sm p-4 transition"
+              className="group border border-border bg-surface hover:border-amber/60 rounded-sm p-5 transition"
             >
               <div className="flex items-start gap-3">
                 <OfficialAvatar official={o} size={48} />

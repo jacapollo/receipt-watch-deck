@@ -34,7 +34,7 @@ function ProfilePage() {
 
   return (
     <AppShell>
-      <div className="px-4 md:px-8 py-6 md:py-8 max-w-4xl mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-4xl mx-auto">
         <SectionHeader eyebrow="USER // ANONYMOUS" title="Profile" />
 
         <div className="border border-border bg-surface rounded-sm p-5">
@@ -65,7 +65,7 @@ function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="border border-border rounded-sm p-3">
               <div className="mono-label text-amber flex items-center gap-1.5">
                 <MapPin className="h-3 w-3" /> YOUR AREA
@@ -85,7 +85,7 @@ function ProfilePage() {
 
         {/* Following */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="border border-border bg-surface rounded-sm p-4">
+          <div className="border border-border bg-surface rounded-sm p-5">
             <div className="mono-label text-amber mb-3">OFFICIALS FOLLOWED · {followedIds.length}</div>
             <ul className="space-y-2">
               {followedIds.map((id) => {
@@ -110,7 +110,7 @@ function ProfilePage() {
             </ul>
           </div>
 
-          <div className="border border-border bg-surface rounded-sm p-4">
+          <div className="border border-border bg-surface rounded-sm p-5">
             <div className="mono-label text-cyan mb-3">BILLS TRACKED · {trackedBillIds.length}</div>
             <ul className="space-y-2">
               {trackedBillIds.map((id) => {
@@ -131,7 +131,7 @@ function ProfilePage() {
         </div>
 
         {/* Notifications */}
-        <div className="mt-6 border border-border bg-surface rounded-sm p-4">
+        <div className="mt-6 border border-border bg-surface rounded-sm p-5">
           <div className="mono-label text-amber mb-3 flex items-center gap-1.5">
             <Bell className="h-3 w-3" /> NOTIFICATIONS
           </div>
