@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { AppShell } from "@/components/layout/AppShell";
 import { OfficeTag, PartyDot, OfficialAvatar, SectionHeader } from "@/components/polysnitch/Primitives";
 import { states, districts, getOfficial } from "@/lib/mock-data";
-import { X } from "lucide-react";
 
 export const Route = createFileRoute("/map")({
   head: () => ({
@@ -15,14 +15,37 @@ export const Route = createFileRoute("/map")({
   component: MapPage,
 });
 
+const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+
+// FIPS (numeric, zero-padded) → USPS two-letter code
+const FIPS_TO_CODE: Record<string, string> = {
+  "01": "AL", "02": "AK", "04": "AZ", "05": "AR", "06": "CA", "08": "CO",
+  "09": "CT", "10": "DE", "11": "DC", "12": "FL", "13": "GA", "15": "HI",
+  "16": "ID", "17": "IL", "18": "IN", "19": "IA", "20": "KS", "21": "KY",
+  "22": "LA", "23": "ME", "24": "MD", "25": "MA", "26": "MI", "27": "MN",
+  "28": "MS", "29": "MO", "30": "MT", "31": "NE", "32": "NV", "33": "NH",
+  "34": "NJ", "35": "NM", "36": "NY", "37": "NC", "38": "ND", "39": "OH",
+  "40": "OK", "41": "OR", "42": "PA", "44": "RI", "45": "SC", "46": "SD",
+  "47": "TN", "48": "TX", "49": "UT", "50": "VT", "51": "VA", "53": "WA",
+  "54": "WV", "55": "WI", "56": "WY",
+};
+
+const STATE_NAMES: Record<string, string> = Object.fromEntries(
+  states.map((s) => [s.code, s.name]),
+);
+
 function MapPage() {
   const [activeState, setActiveState] = useState<string | null>(null);
-  const [activeDistrict, setActiveDistrict] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
 
+  const statesWithData = useMemo(() => new Set(states.map((s) => s.code)), []);
   const districtsForState = activeState
     ? districts.filter((d) => d.stateCode === activeState)
     : [];
-  const district = activeDistrict ? districts.find((d) => d.id === activeDistrict) : null;
+
+  const activeStateName = activeState
+    ? STATE_NAMES[activeState] ?? activeState
+    : null;
 
   return (
     <AppShell>
@@ -45,79 +68,86 @@ function MapPage() {
             </div>
             {activeState && (
               <button
-                onClick={() => {
-                  setActiveState(null);
-                  setActiveDistrict(null);
-                }}
+                onClick={() => setActiveState(null)}
                 className="absolute top-3 right-3 z-10 font-mono text-[10px] uppercase tracking-widest border border-border bg-surface px-2 py-1 rounded-sm text-muted-foreground hover:text-amber"
               >
                 ← Zoom out
               </button>
             )}
-            <svg viewBox="0 0 960 540" className="w-full h-auto block">
-              <defs>
-                <pattern id="hud" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <rect width="960" height="540" fill="url(#hud)" />
 
-              {/* States */}
-              {!activeState &&
-                states.map((s) => (
-                  <g key={s.code} className="cursor-pointer" onClick={() => setActiveState(s.code)}>
-                    <path
-                      d={s.d}
-                      fill={s.color}
-                      stroke="var(--color-border)"
-                      strokeWidth="1.5"
-                      className="hover:fill-[color:var(--color-surface-2)] transition-colors"
-                    />
-                    <text
-                      x={s.d.split(" ")[1]}
-                      y={(parseFloat(s.d.split(" ")[2]) || 0) + 30}
-                      fill="var(--color-muted-foreground)"
-                      fontFamily="var(--font-mono)"
-                      fontSize="11"
-                      letterSpacing="2"
-                    >
-                      {s.code}
-                    </text>
-                  </g>
-                ))}
+            <div className="relative z-[1] w-full">
+              <ComposableMap
+                projection="geoAlbersUsa"
+                projectionConfig={{ scale: 1000 }}
+                width={960}
+                height={540}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              >
+                <Geographies geography={GEO_URL}>
+                  {({ geographies }) =>
+                    geographies.map((geo) => {
+                      const fips = String(geo.id).padStart(2, "0");
+                      const code = FIPS_TO_CODE[fips];
+                      const hasData = code ? statesWithData.has(code) : false;
+                      const isActive = code && activeState === code;
+                      const isHovered = code && hovered === code;
 
-              {/* Districts of active state */}
-              {activeState &&
-                districtsForState.map((d) => (
-                  <g
-                    key={d.id}
-                    className="cursor-pointer"
-                    onClick={() => setActiveDistrict(d.id)}
-                  >
-                    <path
-                      d={d.d}
-                      fill={activeDistrict === d.id ? "var(--color-amber)" : "var(--color-surface-2)"}
-                      stroke={activeDistrict === d.id ? "var(--color-amber)" : "var(--color-border)"}
-                      strokeWidth="1.5"
-                      fillOpacity={activeDistrict === d.id ? 0.35 : 1}
-                      className="hover:stroke-[color:var(--color-cyan)] transition"
-                    />
-                    <text
-                      x={parseFloat(d.d.split(" ")[1]) + 8}
-                      y={parseFloat(d.d.split(" ")[2]) + 16}
-                      fill="var(--color-muted-foreground)"
-                      fontFamily="var(--font-mono)"
-                      fontSize="9"
-                      letterSpacing="1.5"
-                    >
-                      {d.id}
-                    </text>
-                  </g>
-                ))}
-            </svg>
+                      const baseFill = hasData
+                        ? "var(--color-surface-2)"
+                        : "var(--color-surface)";
+                      const hoverFill = "var(--color-surface-2)";
 
-            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              <span>GRID · ILLUSTRATIVE</span>
+                      return (
+                        <Geography
+                          key={geo.rsmKey}
+                          geography={geo}
+                          onClick={() => code && setActiveState(code)}
+                          onMouseEnter={() => code && setHovered(code)}
+                          onMouseLeave={() => setHovered(null)}
+                          style={{
+                            default: {
+                              fill: isActive ? "var(--color-amber)" : baseFill,
+                              fillOpacity: isActive ? 0.35 : hasData ? 1 : 0.55,
+                              stroke: isActive
+                                ? "var(--color-amber)"
+                                : "var(--color-border)",
+                              strokeWidth: isActive ? 1.25 : 0.6,
+                              outline: "none",
+                              cursor: code ? "pointer" : "default",
+                              transition: "fill 120ms, fill-opacity 120ms",
+                            },
+                            hover: {
+                              fill: isActive
+                                ? "var(--color-amber)"
+                                : isHovered
+                                  ? "var(--color-cyan)"
+                                  : hoverFill,
+                              fillOpacity: isActive ? 0.45 : isHovered ? 0.18 : 1,
+                              stroke: isActive
+                                ? "var(--color-amber)"
+                                : "var(--color-cyan)",
+                              strokeWidth: 1.25,
+                              outline: "none",
+                              cursor: "pointer",
+                            },
+                            pressed: {
+                              fill: "var(--color-amber)",
+                              fillOpacity: 0.5,
+                              stroke: "var(--color-amber)",
+                              strokeWidth: 1.25,
+                              outline: "none",
+                            },
+                          }}
+                        />
+                      );
+                    })
+                  }
+                </Geographies>
+              </ComposableMap>
+            </div>
+
+            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground z-10">
+              <span>GRID · US STATES</span>
               <span className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-status-green animate-pulse" />
                 LIVE FEED
@@ -125,64 +155,72 @@ function MapPage() {
             </div>
           </div>
 
-          {/* District panel */}
+          {/* State panel */}
           <aside className="border border-border bg-surface rounded-sm p-5 min-h-[400px]">
-            {!district && (
+            {!activeState && (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                <div className="mono-label text-amber">NO DISTRICT SELECTED</div>
+                <div className="mono-label text-amber">NO STATE SELECTED</div>
                 <p className="mt-3 text-sm text-muted-foreground max-w-xs">
-                  {activeState
-                    ? "Tap a district on the map to see who represents it."
-                    : "Tap a state to zoom in."}
+                  Tap a state to zoom in.
                 </p>
               </div>
             )}
-            {district && (
+            {activeState && (
               <>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="mono-label text-cyan">DISTRICT PROFILE</div>
-                    <h3 className="text-lg font-bold mt-1">{district.name}</h3>
-                    <div className="mono-label mt-1">
-                      LEVEL · {district.level.toUpperCase()}
-                    </div>
+                    <div className="mono-label text-cyan">STATE PROFILE</div>
+                    <h3 className="text-lg font-bold mt-1">{activeStateName}</h3>
+                    <div className="mono-label mt-1">CODE · {activeState}</div>
                   </div>
-                  <button
-                    onClick={() => setActiveDistrict(null)}
-                    className="text-muted-foreground hover:text-amber"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
                 </div>
 
-                <div className="mt-5 mono-label">REPRESENTED BY</div>
-                <ul className="mt-2 space-y-2">
-                  {district.officialIds.map((id) => {
-                    const o = getOfficial(id);
-                    if (!o) return null;
-                    return (
-                      <li key={id}>
-                        <Link
-                          to="/officials/$id"
-                          params={{ id }}
-                          className="flex items-center gap-3 p-2 -mx-2 rounded-sm hover:bg-surface-2 group"
-                        >
-                          <OfficialAvatar official={o} size={40} />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold truncate group-hover:text-amber">
-                                {o.name}
-                              </span>
-                              <PartyDot party={o.party} />
-                            </div>
-                            <OfficeTag level={o.level} text={o.office} />
-                          </div>
-                          <span className="mono-label group-hover:text-amber">OPEN →</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {districtsForState.length === 0 && (
+                  <p className="mt-6 text-sm text-muted-foreground">
+                    No records yet for {activeStateName} — sample coverage is currently CA, TX, NY, and FL.
+                  </p>
+                )}
+
+                {districtsForState.length > 0 && (
+                  <div className="mt-5 space-y-5">
+                    {districtsForState.map((d) => (
+                      <div key={d.id}>
+                        <div className="mono-label text-cyan">{d.id}</div>
+                        <div className="text-sm font-semibold mt-0.5">{d.name}</div>
+                        <div className="mono-label mt-0.5">
+                          LEVEL · {d.level.toUpperCase()}
+                        </div>
+                        <ul className="mt-2 space-y-2">
+                          {d.officialIds.map((id) => {
+                            const o = getOfficial(id);
+                            if (!o) return null;
+                            return (
+                              <li key={id}>
+                                <Link
+                                  to="/officials/$id"
+                                  params={{ id }}
+                                  className="flex items-center gap-3 p-2 -mx-2 rounded-sm hover:bg-surface-2 group"
+                                >
+                                  <OfficialAvatar official={o} size={40} />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold truncate group-hover:text-amber">
+                                        {o.name}
+                                      </span>
+                                      <PartyDot party={o.party} />
+                                    </div>
+                                    <OfficeTag level={o.level} text={o.office} />
+                                  </div>
+                                  <span className="mono-label group-hover:text-amber">OPEN →</span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </aside>
