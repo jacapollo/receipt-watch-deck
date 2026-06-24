@@ -104,14 +104,15 @@ function MapPage() {
                           onClick={() => code && setActiveState(code)}
                           onMouseEnter={() => code && setHovered(code)}
                           onMouseLeave={() => setHovered(null)}
+                          vectorEffect="non-scaling-stroke"
                           style={{
                             default: {
                               fill: isActive ? "var(--color-amber)" : baseFill,
                               fillOpacity: isActive ? 0.35 : hasData ? 1 : 0.55,
                               stroke: isActive
                                 ? "var(--color-amber)"
-                                : "var(--color-border)",
-                              strokeWidth: isActive ? 1.25 : 0.6,
+                                : "rgba(180, 190, 200, 0.55)",
+                              strokeWidth: isActive ? 1 : 0.9,
                               outline: "none",
                               cursor: code ? "pointer" : "default",
                               transition: "fill 120ms, fill-opacity 120ms",
@@ -125,8 +126,8 @@ function MapPage() {
                               fillOpacity: isActive ? 0.45 : isHovered ? 0.18 : 1,
                               stroke: isActive
                                 ? "var(--color-amber)"
-                                : "var(--color-cyan)",
-                              strokeWidth: 1.25,
+                                : "rgba(210, 220, 230, 0.85)",
+                              strokeWidth: 1,
                               outline: "none",
                               cursor: "pointer",
                             },
@@ -134,11 +135,12 @@ function MapPage() {
                               fill: "var(--color-amber)",
                               fillOpacity: 0.5,
                               stroke: "var(--color-amber)",
-                              strokeWidth: 1.25,
+                              strokeWidth: 1,
                               outline: "none",
                             },
                           }}
                         />
+
                       );
                     })
                   }
