@@ -83,10 +83,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <main className="flex-1 min-w-0 pt-12 md:pt-0 pb-16 md:pb-0">{children}</main>
+      <main className="flex-1 min-w-0 pt-12 md:pt-0 pb-20 md:pb-0">{children}</main>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 h-16 border-t border-border bg-surface grid grid-cols-6">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 h-20 border-t border-border bg-surface grid grid-cols-6 pb-[env(safe-area-inset-bottom)]">
         {nav.map((item) => {
           const active = pathname === item.to || pathname.startsWith(item.to + "/");
           const Icon = item.icon;
@@ -94,12 +94,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center gap-0.5 text-[10px] ${
+              className={`flex flex-col items-center justify-center gap-1 px-1 py-2 min-w-0 ${
                 active ? "text-amber" : "text-muted-foreground"
               }`}
             >
-              <Icon className="h-5 w-5" />
-              <span className="font-mono uppercase tracking-wider">{item.label}</span>
+              <Icon className="h-5 w-5 shrink-0" />
+              <span className="font-mono uppercase tracking-wider text-[9px] leading-none truncate max-w-full">
+                {item.label}
+              </span>
             </Link>
           );
         })}
