@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OfficialsRouteImport } from './routes/officials'
+import { Route as MoneyRouteImport } from './routes/money'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DiscussRouteImport } from './routes/discuss'
@@ -28,6 +29,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const OfficialsRoute = OfficialsRouteImport.update({
   id: '/officials',
   path: '/officials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoneyRoute = MoneyRouteImport.update({
+  id: '/money',
+  path: '/money',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MapRoute = MapRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
   '/map': typeof MapRoute
+  '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/discuss/$id': typeof DiscussIdRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
   '/map': typeof MapRoute
+  '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/discuss/$id': typeof DiscussIdRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
   '/map': typeof MapRoute
+  '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/discuss/$id': typeof DiscussIdRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/discuss'
     | '/feed'
     | '/map'
+    | '/money'
     | '/officials'
     | '/profile'
     | '/discuss/$id'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/discuss'
     | '/feed'
     | '/map'
+    | '/money'
     | '/officials'
     | '/profile'
     | '/discuss/$id'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/discuss'
     | '/feed'
     | '/map'
+    | '/money'
     | '/officials'
     | '/profile'
     | '/discuss/$id'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   DiscussRoute: typeof DiscussRouteWithChildren
   FeedRoute: typeof FeedRoute
   MapRoute: typeof MapRoute
+  MoneyRoute: typeof MoneyRoute
   OfficialsRoute: typeof OfficialsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
 }
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       path: '/officials'
       fullPath: '/officials'
       preLoaderRoute: typeof OfficialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/money': {
+      id: '/money'
+      path: '/money'
+      fullPath: '/money'
+      preLoaderRoute: typeof MoneyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/map': {
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   DiscussRoute: DiscussRouteWithChildren,
   FeedRoute: FeedRoute,
   MapRoute: MapRoute,
+  MoneyRoute: MoneyRoute,
   OfficialsRoute: OfficialsRouteWithChildren,
   ProfileRoute: ProfileRoute,
 }
