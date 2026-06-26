@@ -33,21 +33,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type Lens = {
-  id: string;
-  label: string;
-  to?: "/bills" | "/feed";
-  soon?: boolean;
-  active?: boolean;
-};
 
-const lenses: Lens[] = [
-  { id: "overview", label: "Overview", active: true },
-  { id: "money", label: "Money", soon: true },
-  { id: "votes", label: "Votes", soon: true },
-  { id: "bills", label: "Bills", to: "/bills" },
-  { id: "feed", label: "Feed", to: "/feed" },
-];
 
 const sectors = [
   { label: "Real estate", amount: 1840000 },
