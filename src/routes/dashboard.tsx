@@ -204,15 +204,14 @@ function DashboardPage() {
             value={officialsTracked}
             sub="across fed / state / local"
             icon={UsersIcon}
-            tone="amber"
           />
           <StatTile
             label="BILLS MOVING"
             value={billsMoving}
             sub="not yet signed or failed"
             icon={ScrollText}
-            tone="cyan"
           />
+
           <StatTile
             label="NEW FILINGS · 7D"
             value={newFilingsThisWeek}
