@@ -6,10 +6,9 @@ import {
   Users as UsersIcon,
   Vote,
   ScrollText,
-  Radio,
-  LayoutDashboard,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { LensSwitcher } from "@/components/polysnitch/LensSwitcher";
 import {
   BillStatusPill,
   OfficialAvatar,
@@ -18,6 +17,7 @@ import {
   StatTile,
 } from "@/components/polysnitch/Primitives";
 import { bills, getOfficial, officials } from "@/lib/mock-data";
+
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
