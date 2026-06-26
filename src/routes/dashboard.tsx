@@ -69,18 +69,39 @@ function DashboardPage() {
   const newFilingsThisWeek = 6; // sample
   const votesThisWeek = 14; // sample
 
-  // Notable votes — pull a few real records from the mock bills with votes.
-  const notableVotes = bills
-    .filter((b) => b.votes && b.votes.length > 0)
-    .flatMap((b) =>
-      (b.votes ?? []).slice(0, 2).map((v) => ({
-        billId: b.id,
-        billTitle: b.title,
-        officialId: v.officialId,
-        vote: v.vote,
-      })),
-    )
-    .slice(0, 5);
+  // Notable votes — curated mix across four distinct bills with a realistic
+  // Yea/Nay split. Mendez's Nay on HR-2241 matches the Daily Brief above.
+  const notableVotes: {
+    billId: string;
+    billTitle: string;
+    officialId: string;
+    vote: "Yea" | "Nay";
+  }[] = [
+    {
+      billId: "bill-hr-2241",
+      billTitle: "HR-2241 — Public Transit Modernization Act",
+      officialId: "fed-rep-tx07-mendez",
+      vote: "Nay",
+    },
+    {
+      billId: "bill-sb-118",
+      billTitle: "SB-118 — Renter Stability & Cap Reform",
+      officialId: "ca-sen-11-ortiz",
+      vote: "Yea",
+    },
+    {
+      billId: "bill-hb-991",
+      billTitle: "HB-991 — Oil & Gas Setback Rollback",
+      officialId: "tx-rep-78-callahan",
+      vote: "Yea",
+    },
+    {
+      billId: "bill-ord-44",
+      billTitle: "Ord. 44-2026 — Lobbyist 48-Hour Disclosure",
+      officialId: "local-cc-sf-5-abernathy",
+      vote: "Nay",
+    },
+  ];
 
   const billsMovingList = bills
     .filter((b) => b.status !== "Signed" && b.status !== "Failed")
