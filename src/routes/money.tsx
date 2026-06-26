@@ -325,6 +325,3 @@ function MoneyPage() {
     </AppShell>
   );
 }
-
-// Avoid unused import warning if getOfficial is tree-shaken
-void getOfficial;
