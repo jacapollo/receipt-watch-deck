@@ -218,15 +218,14 @@ function DashboardPage() {
             value={newFilingsThisWeek}
             sub="sample · disclosure feeds"
             icon={FileText}
-            tone="yellow"
           />
           <StatTile
             label="VOTES · 7D"
             value={votesThisWeek}
             sub="sample · floor + committee"
             icon={Vote}
-            tone="green"
           />
+
         </div>
 
         {/* Daily Brief */}
