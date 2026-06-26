@@ -8,8 +8,9 @@ import {
   SectionHeader,
   StatTile,
 } from "@/components/polysnitch/Primitives";
-import { funding, officials, getOfficial } from "@/lib/mock-data";
+import { funding, officials } from "@/lib/mock-data";
 import type { FundingItem } from "@/lib/mock-data";
+
 
 export const Route = createFileRoute("/money")({
   head: () => ({
