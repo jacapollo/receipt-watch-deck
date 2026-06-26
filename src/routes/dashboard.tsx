@@ -127,50 +127,8 @@ function DashboardPage() {
   return (
     <AppShell>
       <div className="px-4 md:px-8 py-8 max-w-[1400px] mx-auto">
-        {/* Lens switcher */}
-        <div className="mb-6 flex items-center gap-2 flex-wrap">
-          <span className="mono-label mr-1 hidden sm:inline">LENS</span>
-          {lenses.map((l) => {
-            const base =
-              "inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest border rounded-sm transition";
-            if (l.active) {
-              return (
-                <span
-                  key={l.id}
-                  className={`${base} bg-amber text-primary-foreground border-amber`}
-                >
-                  <LayoutDashboard className="h-3 w-3" />
-                  {l.label}
-                </span>
-              );
-            }
-            if (l.soon) {
-              return (
-                <button
-                  key={l.id}
-                  disabled
-                  aria-disabled
-                  className={`${base} border-border text-muted-foreground/60 cursor-not-allowed`}
-                >
-                  {l.label}
-                  <span className="ml-1 px-1 py-px text-[9px] tracking-widest border border-border rounded-[2px] text-muted-foreground">
-                    SOON
-                  </span>
-                </button>
-              );
-            }
-            return (
-              <Link
-                key={l.id}
-                to={l.to!}
-                className={`${base} border-border text-muted-foreground hover:text-foreground hover:border-amber/60 hover:bg-surface-2`}
-              >
-                {l.id === "feed" ? <Radio className="h-3 w-3" /> : <ScrollText className="h-3 w-3" />}
-                {l.label}
-              </Link>
-            );
-          })}
-        </div>
+        <LensSwitcher active="overview" />
+
 
         <SectionHeader
           eyebrow="FLORIDA // SITUATIONAL OVERVIEW"
