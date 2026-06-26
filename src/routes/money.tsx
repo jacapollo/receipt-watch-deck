@@ -71,7 +71,10 @@ function MoneyPage() {
   }
 
   const total = sumBy(allFunding, (f) => f.amount);
-  const bySector = groupSum(allFunding, (f) => f.sector, (f) => f.amount);
+  // Interest sectors only — exclude source-type buckets that already appear under "By source type".
+  const NON_SECTOR_TYPES = new Set(["Individual", "Party", "Self"]);
+  const interestFunding = allFunding.filter((f) => !NON_SECTOR_TYPES.has(f.type));
+  const bySector = groupSum(interestFunding, (f) => f.sector, (f) => f.amount);
   const byType = groupSum(allFunding, (f) => f.type, (f) => f.amount);
   const topDonors = groupSum(allFunding, (f) => f.donor, (f) => f.amount).slice(0, 8);
   // Lookup sector for donor (most common)
@@ -86,13 +89,12 @@ function MoneyPage() {
   const donorsTracked = allFunding.length;
   const largestDonor = topDonors[0];
 
-  // Per-official totals
+  // Per-official totals — use official's stated topSector as the interest sector
   const perOfficial = officials
     .map((o) => {
       const items = funding[o.id] ?? [];
       const officialTotal = sumBy(items, (i) => i.amount);
-      const sectorBreakdown = groupSum(items, (i) => i.sector, (i) => i.amount);
-      return { official: o, total: officialTotal, topSector: sectorBreakdown[0]?.label ?? "—" };
+      return { official: o, total: officialTotal, topSector: o.stats.topSector };
     })
     .sort((a, b) => b.total - a.total)
     .slice(0, 6);
@@ -187,9 +189,9 @@ function MoneyPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="mono-label text-amber flex items-center gap-1.5">
                 <TrendingUp className="h-3 w-3" />
-                BY SECTOR (CYCLE TO DATE)
+                BY INTEREST SECTOR (CYCLE TO DATE)
               </div>
-              <span className="mono-label">SAMPLE</span>
+              <span className="mono-label">ORGANIZED CONTRIBUTIONS</span>
             </div>
             <ul className="space-y-3">
               {bySector.map((s) => {
