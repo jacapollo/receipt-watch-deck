@@ -189,9 +189,9 @@ function MoneyPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="mono-label text-amber flex items-center gap-1.5">
                 <TrendingUp className="h-3 w-3" />
-                BY SECTOR (CYCLE TO DATE)
+                BY INTEREST SECTOR (CYCLE TO DATE)
               </div>
-              <span className="mono-label">SAMPLE</span>
+              <span className="mono-label">ORGANIZED CONTRIBUTIONS</span>
             </div>
             <ul className="space-y-3">
               {bySector.map((s) => {
