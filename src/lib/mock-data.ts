@@ -326,20 +326,107 @@ function generateActions(): OfficialAction[] {
 
 export const actions: OfficialAction[] = generateActions();
 
+// Deterministic per-official funding profiles, biased toward each official's topSector.
+// Sector pools list candidate interest-sector PAC donors (no "Individual", "Party", or "Self" here).
+const sectorDonorPool: Record<string, string[]> = {
+  "Real Estate": ["Pinnacle Realty PAC", "Coastal Developers Assn.", "Urban Land Council PAC", "Skyline Property Group"],
+  "Energy": ["Atlas Energy Coalition", "Continental Grid PAC", "Western Power Alliance", "Heartland Utilities PAC"],
+  "Oil & Gas": ["Permian Producers PAC", "Lone Star Petroleum Assn.", "Gulf Drillers Coalition", "Pipeline Workers PAC"],
+  "Education": ["United Educators Fund", "Charter Schools Now PAC", "State Teachers Assn.", "Higher Ed Advocates PAC"],
+  "Tech / Communications": ["Bay Tech Workers United", "Pacific Software Alliance", "Wireless Carriers PAC", "Cloud Industry Council"],
+  "Tech": ["Bay Tech Workers United", "Pacific Software Alliance", "Wireless Carriers PAC", "Cloud Industry Council"],
+  "Finance / Insurance": ["Pacific Mutual PAC", "Federated Bankers Assn.", "Securities Industry PAC", "Insurance Underwriters Fund"],
+  "Healthcare": ["Healthcare Access Now", "Hospital Systems Council", "Nurses United PAC", "Pharma Innovators PAC"],
+  "Labor": ["Service Workers Local 1199", "Building Trades Council", "Hospitality Workers Local 802", "Teamsters Joint Council"],
+  "Construction": ["Associated Builders PAC", "Heavy Equipment Operators", "Concrete & Aggregate PAC", "Subcontractors Alliance"],
+  "Hospitality": ["Restaurant Owners Assn.", "Hotel & Lodging PAC", "Tourism Council PAC", "Beverage Distributors PAC"],
+  "Small Business": ["Main Street Alliance", "Independent Retailers PAC", "Local Chambers Coalition", "Family Business Council"],
+};
+
+const secondarySectors = ["Real Estate", "Finance / Insurance", "Healthcare", "Tech", "Labor", "Education", "Energy", "Construction"];
+
+function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function makeRng(seed: number) {
+  let s = seed || 1;
+  return () => {
+    s = Math.imul(s ^ (s >>> 15), 2246822507);
+    s = Math.imul(s ^ (s >>> 13), 3266489909);
+    s ^= s >>> 16;
+    return (s >>> 0) / 4294967296;
+  };
+}
+
+function buildFundingFor(o: Official): FundingItem[] {
+  const rng = makeRng(hashStr(o.id));
+  const items: FundingItem[] = [];
+  const top = o.stats.topSector;
+  const topPool = sectorDonorPool[top] ?? sectorDonorPool[secondarySectors[Math.floor(rng() * secondarySectors.length)]];
+
+  // 3 heavy donors in the official's top sector
+  const heavyCount = 3;
+  for (let i = 0; i < heavyCount; i++) {
+    items.push({
+      donor: topPool[i % topPool.length],
+      sector: top,
+      amount: Math.round((35000 + rng() * 45000) / 100) * 100,
+      type: "PAC",
+    });
+  }
+
+  // 2 secondary sector donors (different from top)
+  const others = secondarySectors.filter((s) => s !== top);
+  for (let i = 0; i < 2; i++) {
+    const sec = others[Math.floor(rng() * others.length)];
+    const pool = sectorDonorPool[sec];
+    items.push({
+      donor: pool[Math.floor(rng() * pool.length)],
+      sector: sec,
+      amount: Math.round((8000 + rng() * 22000) / 100) * 100,
+      type: "PAC",
+    });
+  }
+
+  // Individuals (always)
+  items.push({
+    donor: "Small-dollar donors (avg $34)",
+    sector: "Individual",
+    amount: Math.round((20000 + rng() * 140000) / 100) * 100,
+    type: "Individual",
+  });
+
+  // Party (most have one)
+  if (rng() > 0.15) {
+    items.push({
+      donor: o.party === "R" ? "State Republican Committee" : o.party === "D" ? "State Democratic Committee" : "Independent Caucus Fund",
+      sector: "Party",
+      amount: Math.round((10000 + rng() * 70000) / 100) * 100,
+      type: "Party",
+    });
+  }
+
+  // Self-funding (some)
+  if (rng() > 0.7) {
+    items.push({
+      donor: `${o.name.split(" ").slice(-1)[0]} for ${o.state}`,
+      sector: "Self",
+      amount: Math.round((5000 + rng() * 60000) / 100) * 100,
+      type: "Self",
+    });
+  }
+
+  return items;
+}
+
 export const funding: Record<string, FundingItem[]> = Object.fromEntries(
-  officials.map((o) => [
-    o.id,
-    [
-      { donor: "Pinnacle Realty PAC", sector: "Real Estate", amount: 48200, type: "PAC" },
-      { donor: "Atlas Energy Coalition", sector: "Energy", amount: 36100, type: "PAC" },
-      { donor: "United Educators Fund", sector: "Education", amount: 29800, type: "PAC" },
-      { donor: "Bay Tech Workers United", sector: "Tech", amount: 24500, type: "PAC" },
-      { donor: "Small-dollar donors (avg $34)", sector: "Individual", amount: 88400, type: "Individual" },
-      { donor: "State Party Committee", sector: "Party", amount: 52000, type: "Party" },
-      { donor: "Hospitality Workers Local 802", sector: "Labor", amount: 18900, type: "PAC" },
-      { donor: "Healthcare Access Now", sector: "Healthcare", amount: 21300, type: "PAC" },
-    ],
-  ]),
+  officials.map((o) => [o.id, buildFundingFor(o)]),
 );
 
 export const bills: Bill[] = [
