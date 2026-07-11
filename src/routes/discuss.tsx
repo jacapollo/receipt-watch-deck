@@ -33,7 +33,7 @@ function DiscussPage() {
           right={
             <button
               onClick={() => setGuidelinesOpen(true)}
-              className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest border border-border bg-surface px-2.5 py-1.5 rounded-sm text-muted-foreground hover:text-amber hover:border-amber"
+              className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest border border-border bg-surface px-2.5 py-1.5 rounded-sm text-muted-foreground hover:text-amber hover:border-amber"
             >
               <ShieldAlert className="h-3 w-3" />
               Community guidelines
@@ -45,7 +45,7 @@ function DiscussPage() {
           <span className="mono-label mr-1">FILTER</span>
           <button
             onClick={() => setTag(null)}
-            className={`font-mono text-[10px] uppercase tracking-widest px-2 py-1 border rounded-[2px] ${
+            className={`font-mono text-[11px] uppercase tracking-widest px-2 py-1 border rounded-[2px] ${
               !tag ? "bg-amber/10 border-amber/50 text-amber" : "border-border text-muted-foreground"
             }`}
           >
@@ -55,7 +55,7 @@ function DiscussPage() {
             <button
               key={t}
               onClick={() => setTag(t === tag ? null : t)}
-              className={`font-mono text-[10px] uppercase tracking-widest px-2 py-1 border rounded-[2px] ${
+              className={`font-mono text-[11px] uppercase tracking-widest px-2 py-1 border rounded-[2px] ${
                 tag === t
                   ? "bg-amber/10 border-amber/50 text-amber"
                   : "border-border text-muted-foreground hover:text-foreground"
@@ -80,7 +80,7 @@ function DiscussPage() {
                     {t.tags.map((tg) => (
                       <span
                         key={tg}
-                        className="font-mono text-[10px] uppercase tracking-widest text-cyan border border-cyan/40 px-1.5 py-0.5 rounded-[2px]"
+                        className="font-mono text-[11px] uppercase tracking-widest text-cyan border border-cyan/40 px-1.5 py-0.5 rounded-[2px]"
                       >
                         {tg}
                       </span>
@@ -95,7 +95,7 @@ function DiscussPage() {
                     {t.title}
                   </Link>
                   <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{t.body}</p>
-                  <div className="mt-2 flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <div className="mt-2 flex items-center gap-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                     <span>@{t.author}</span>
                     <span>{formatTimeAgo(t.createdAt)}</span>
                     <span className="flex items-center gap-1">

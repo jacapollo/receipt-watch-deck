@@ -5,16 +5,16 @@ import { ArrowRight, Radar, FileText, DollarSign, ShieldCheck } from "lucide-rea
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PolySnitch — Track them the way they track you" },
+      { title: "PolySnitch — Public officials, on the record" },
       {
         name: "description",
         content:
-          "An intelligence-dashboard for political accountability. Public records. Real funding. No spin.",
+          "A clear dashboard for political accountability. Public records, real funding, no spin.",
       },
-      { property: "og:title", content: "PolySnitch — Track them the way they track you" },
+      { property: "og:title", content: "PolySnitch — Public officials, on the record" },
       {
         property: "og:description",
-        content: "Track local, state, and federal officials using only public records.",
+        content: "Follow the public record of local, state, and federal officials.",
       },
     ],
   }),
@@ -101,7 +101,7 @@ function Landing() {
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </form>
-        <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="mt-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           DEMO MODE · Any input drops you into a sample district.
         </div>
 
@@ -124,7 +124,7 @@ function Landing() {
           ))}
         </div>
 
-        <div className="mt-16 flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="mt-16 flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <span className="h-px bg-border flex-1" />
           PolySnitch tracks the public record of public officials only.
           <span className="h-px bg-border flex-1" />

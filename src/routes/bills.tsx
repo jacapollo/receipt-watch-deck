@@ -1,16 +1,35 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import {
   BillStatusPill,
   LevelFilterBar,
   OfficeTag,
   OfficialAvatar,
+  PartyDot,
   SectionHeader,
+  SourceTag,
 } from "@/components/polysnitch/Primitives";
-import { bills, getOfficial, formatTimeAgo } from "@/lib/mock-data";
-import { ChevronDown, ChevronRight, Star } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import {
+  deriveBillStatus,
+  fetchBills,
+  fetchBillSponsors,
+  fetchBillVotes,
+  hostOf,
+  levelOf,
+  officialSlug,
+  optionDisplay,
+  sponsorOfficialId,
+  stampOf,
+  toPartyCode,
+  type BillRow,
+} from "@/lib/records";
+import { supabaseConfigured } from "@/lib/supabase";
+import { TrackButton } from "@/components/polysnitch/TrackButton";
+import { ChevronDown, ChevronRight, ChevronLeft, Search } from "lucide-react";
+
+const PAGE_SIZE = 20;
 
 export const Route = createFileRoute("/bills")({
   head: () => ({
@@ -24,26 +43,25 @@ export const Route = createFileRoute("/bills")({
 
 function BillsPage() {
   const [level, setLevel] = useState<"all" | "federal" | "state" | "local">("all");
-  const [tag, setTag] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
   const [open, setOpen] = useState<string | null>(null);
-  const [followed, setFollowed] = useState<Set<string>>(new Set());
 
-  const allTags = useMemo(
-    () => Array.from(new Set(bills.flatMap((b) => b.tags))).sort(),
-    [],
-  );
+  const query = useQuery({
+    queryKey: ["bills", page, level, q],
+    queryFn: () => fetchBills({ page, level, search: q, pageSize: PAGE_SIZE }),
+    enabled: supabaseConfigured,
+    placeholderData: keepPreviousData,
+  });
 
-  const list = bills
-    .filter((b) => level === "all" || b.level === level)
-    .filter((b) => !tag || b.tags.includes(tag));
+  const rows = query.data?.rows ?? [];
+  const total = query.data?.total ?? 0;
+  const maxPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
 
-  const toggleFollow = (id: string) => {
-    setFollowed((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const reset = (fn: () => void) => {
+    fn();
+    setPage(0);
+    setOpen(null);
   };
 
   return (
@@ -52,158 +70,290 @@ function BillsPage() {
         <SectionHeader
           eyebrow="LEGISLATION // TRACKER"
           title="Bills & Issues"
-          right={<span className="mono-label hidden md:inline">{list.length} BILLS</span>}
+          right={
+            <span className="mono-label hidden md:inline">
+              {supabaseConfigured ? `${total.toLocaleString()} BILLS` : "OFFLINE"}
+            </span>
+          }
         />
 
-        <div className="space-y-3 mb-5">
-          <LevelFilterBar value={level} onChange={setLevel} />
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="mono-label mr-1">TAGS</span>
-            <button
-              onClick={() => setTag(null)}
-              className={`font-mono text-[10px] uppercase tracking-widest px-2 py-1 border rounded-[2px] transition ${
-                !tag ? "bg-cyan/10 border-cyan/50 text-cyan" : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              ALL
-            </button>
-            {allTags.map((t) => (
-              <button
-                key={t}
-                onClick={() => setTag(t === tag ? null : t)}
-                className={`font-mono text-[10px] uppercase tracking-widest px-2 py-1 border rounded-[2px] transition ${
-                  tag === t
-                    ? "bg-cyan/10 border-cyan/50 text-cyan"
-                    : "border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          <LevelFilterBar value={level} onChange={(v) => reset(() => setLevel(v))} />
+          <div className="flex items-center gap-2 border border-border bg-surface rounded-sm px-3 py-1.5 flex-1 min-w-[200px] max-w-md focus-within:border-amber">
+            <Search className="h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => reset(() => setQ(e.target.value))}
+              placeholder="Search bill number or title…"
+              className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground/60"
+            />
           </div>
         </div>
 
-        <div className="space-y-3">
-          {list.map((b) => {
-            const isOpen = open === b.id;
-            const isFollowed = followed.has(b.id);
-            return (
-              <article
-                key={b.id}
-                className="border border-border bg-surface rounded-sm overflow-hidden"
-              >
-                <div className="p-4 md:p-5">
-                  <div className="flex items-start gap-3">
-                    <button
-                      onClick={() => setOpen(isOpen ? null : b.id)}
-                      className="mt-1 text-muted-foreground hover:text-amber shrink-0"
-                    >
-                      {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <BillStatusPill status={b.status} />
-                        <span className="mono-label">
-                          {b.level.toUpperCase()} · INTRO {formatTimeAgo(b.introduced)} AGO
-                        </span>
-                      </div>
-                      <h3 className="mt-2 text-base md:text-lg font-bold">{b.title}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{b.summary}</p>
-                      <div className="mt-2 flex items-center gap-2 flex-wrap">
-                        {b.tags.map((t) => (
-                          <span
-                            key={t}
-                            className="font-mono text-[10px] uppercase tracking-widest text-cyan border border-cyan/40 px-1.5 py-0.5 rounded-[2px]"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => toggleFollow(b.id)}
-                      className={`shrink-0 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest px-2.5 py-1.5 border rounded-sm transition ${
-                        isFollowed
-                          ? "bg-amber text-primary-foreground border-amber"
-                          : "border-border text-muted-foreground hover:text-amber hover:border-amber"
-                      }`}
-                    >
-                      <Star className={`h-3 w-3 ${isFollowed ? "fill-current" : ""}`} />
-                      {isFollowed ? "Tracking" : "Track"}
-                    </button>
-                  </div>
-                </div>
+        {!supabaseConfigured ? (
+          <ConfigureNotice />
+        ) : query.isError ? (
+          <ErrorNotice message={(query.error as Error).message} />
+        ) : query.isLoading ? (
+          <SkeletonList />
+        ) : rows.length === 0 ? (
+          <EmptyNotice />
+        ) : (
+          <>
+            <div className="space-y-3">
+              {rows.map((b) => (
+                <BillRowCard
+                  key={b.id}
+                  bill={b}
+                  isOpen={open === b.id}
+                  onToggle={() => setOpen(open === b.id ? null : b.id)}
+                />
+              ))}
+            </div>
 
-                {isOpen && (
-                  <div className="border-t border-border bg-surface-2/40 p-4 md:p-5 space-y-4">
-                    <div>
-                      <div className="mono-label text-amber mb-2">SPONSORS</div>
-                      <div className="flex flex-wrap gap-2">
-                        {b.sponsors.map((sid) => {
-                          const o = getOfficial(sid);
-                          if (!o) return null;
-                          return (
-                            <Link
-                              key={sid}
-                              to="/officials/$id"
-                              params={{ id: sid }}
-                              className="flex items-center gap-2 border border-border bg-surface rounded-sm px-2 py-1.5 hover:border-amber"
-                            >
-                              <OfficialAvatar official={o} size={24} />
-                              <div className="leading-tight">
-                                <div className="text-xs font-semibold">{o.name}</div>
-                                <OfficeTag level={o.level} text={o.district} />
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {b.votes && b.votes.length > 0 && (
-                      <div>
-                        <div className="mono-label text-cyan mb-2">WHO VOTED HOW</div>
-                        <ul className="divide-y divide-border border border-border rounded-sm bg-surface">
-                          {b.votes.map((v) => {
-                            const o = getOfficial(v.officialId);
-                            if (!o) return null;
-                            const voteColor =
-                              v.vote === "Yea"
-                                ? "text-status-green border-status-green/50 bg-status-green/10"
-                                : v.vote === "Nay"
-                                  ? "text-status-red border-status-red/50 bg-status-red/10"
-                                  : "text-muted-foreground border-border";
-                            return (
-                              <li key={v.officialId} className="flex items-center gap-3 px-3 py-2">
-                                <OfficialAvatar official={o} size={28} />
-                                <div className="min-w-0 flex-1">
-                                  <Link
-                                    to="/officials/$id"
-                                    params={{ id: o.id }}
-                                    className="text-sm font-medium hover:text-amber truncate block"
-                                  >
-                                    {o.name}
-                                  </Link>
-                                  <OfficeTag level={o.level} text={o.district} />
-                                </div>
-                                <span
-                                  className={`font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 border rounded-[2px] ${voteColor}`}
-                                >
-                                  {v.vote}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </article>
-            );
-          })}
-        </div>
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <PageButton
+                dir="prev"
+                disabled={page === 0 || query.isFetching}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+              />
+              <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                PAGE {page + 1} / {maxPage + 1}
+              </span>
+              <PageButton
+                dir="next"
+                disabled={page >= maxPage || query.isFetching}
+                onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
+              />
+            </div>
+          </>
+        )}
       </div>
     </AppShell>
+  );
+}
+
+function BillRowCard({
+  bill: b,
+  isOpen,
+  onToggle,
+}: {
+  bill: BillRow;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const subjects = (b.subjects ?? []).filter((s) => s && s.length > 1).slice(0, 6);
+  return (
+    <article className="border border-border bg-surface rounded-sm overflow-hidden">
+      <div className="p-4 md:p-5">
+        <div className="flex items-start gap-3">
+          <button onClick={onToggle} className="mt-1 text-muted-foreground hover:text-amber shrink-0">
+            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <BillStatusPill status={deriveBillStatus(b)} />
+              <span className="mono-label">
+                {(b.level ?? "state").toUpperCase()} · {b.session ?? "—"}
+                {b.introduced_date ? ` · INTRO ${stampOf(b.introduced_date)}` : ""}
+              </span>
+            </div>
+            <h3 className="mt-2 text-base md:text-lg font-bold">
+              <span className="font-mono text-cyan">{b.identifier}</span> — {b.title}
+            </h3>
+            {b.official_summary && (
+              <p className="mt-1 text-sm text-muted-foreground line-clamp-3">{b.official_summary}</p>
+            )}
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              {subjects.map((t) => (
+                <span
+                  key={t}
+                  className="font-mono text-[11px] uppercase tracking-widest text-cyan border border-cyan/40 px-1.5 py-0.5 rounded-[2px]"
+                >
+                  {t}
+                </span>
+              ))}
+              {b.source?.url && <SourceTag source={hostOf(b.source.url)} url={b.source.url} />}
+            </div>
+          </div>
+          <TrackButton kind="bill" id={b.id} size="sm" />
+        </div>
+      </div>
+
+      {isOpen && <BillDetail billId={b.id} />}
+    </article>
+  );
+}
+
+function BillDetail({ billId }: { billId: string }) {
+  const sponsorsQuery = useQuery({
+    queryKey: ["bill-sponsors", billId],
+    queryFn: () => fetchBillSponsors(billId),
+  });
+  const votesQuery = useQuery({
+    queryKey: ["bill-votes", billId],
+    queryFn: () => fetchBillVotes(billId),
+  });
+
+  const sponsors = sponsorsQuery.data ?? [];
+  const votes = votesQuery.data ?? [];
+
+  return (
+    <div className="border-t border-border bg-surface-2/40 p-4 md:p-5 space-y-4">
+      <div>
+        <div className="mono-label text-amber mb-2">SPONSORS</div>
+        {sponsorsQuery.isLoading ? (
+          <div className="h-6 w-40 bg-surface-2 animate-pulse rounded-sm" />
+        ) : sponsors.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No sponsors on record.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {sponsors.map((s, i) => {
+              const resolvedId = sponsorOfficialId(s);
+              const chip = (
+                <span
+                  className={`flex items-center gap-2 border border-border bg-surface rounded-sm px-2 py-1.5 ${
+                    resolvedId ? "hover:border-amber" : ""
+                  }`}
+                >
+                  <span className={`text-xs font-semibold ${resolvedId ? "" : "text-muted-foreground"}`}>
+                    {s.raw_name}
+                  </span>
+                  <span className="mono-label">{(s.classification ?? "sponsor").toUpperCase()}</span>
+                </span>
+              );
+              return resolvedId ? (
+                <Link
+                  key={i}
+                  to="/officials/$id"
+                  params={{ id: officialSlug(resolvedId) }}
+                >
+                  {chip}
+                </Link>
+              ) : (
+                <div key={i}>{chip}</div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <div className="mono-label text-cyan mb-2">WHO VOTED HOW</div>
+        {votesQuery.isLoading ? (
+          <div className="h-24 bg-surface-2 animate-pulse rounded-sm" />
+        ) : votes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No roll-call votes recorded for this bill.</p>
+        ) : (
+          <ul className="divide-y divide-border border border-border rounded-sm bg-surface max-h-96 overflow-auto">
+            {votes.map((v) => {
+              const o = v.officials;
+              const party = toPartyCode(o?.party);
+              const opt = optionDisplay(v.option);
+              return (
+                <li key={v.individual_vote_id} className="flex items-center gap-3 px-3 py-2">
+                  <OfficialAvatar
+                    official={{ name: o?.full_name ?? "?", photoSeed: o?.ocd_person_id ?? "", party }}
+                    size={28}
+                  />
+                  <div className="min-w-0 flex-1">
+                    {o ? (
+                      <Link
+                        to="/officials/$id"
+                        params={{ id: officialSlug(o.ocd_person_id) }}
+                        className="text-sm font-medium hover:text-amber truncate block"
+                      >
+                        {o.full_name}
+                      </Link>
+                    ) : (
+                      <span className="text-sm font-medium truncate block">Unknown</span>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <PartyDot party={party} />
+                      <OfficeTag level="state" text={o?.district ? `Dist ${o.district}` : o?.office ?? "—"} />
+                    </div>
+                  </div>
+                  <span
+                    className={`font-mono text-[11px] uppercase tracking-widest px-2 py-0.5 border rounded-[2px] ${opt.cls}`}
+                  >
+                    {opt.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PageButton({
+  dir,
+  disabled,
+  onClick,
+}: {
+  dir: "prev" | "next";
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const Icon = dir === "prev" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest px-3 py-2 border border-border rounded-sm text-foreground transition hover:border-amber hover:text-amber disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:text-foreground"
+    >
+      {dir === "prev" && <Icon className="h-3.5 w-3.5" />}
+      {dir === "prev" ? "Prev" : "Next"}
+      {dir === "next" && <Icon className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
+
+function SkeletonList() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="border border-border bg-surface rounded-sm p-4 md:p-5">
+          <div className="space-y-2">
+            <div className="h-3 w-1/4 bg-surface-2 animate-pulse rounded-sm" />
+            <div className="h-4 w-2/3 bg-surface-2 animate-pulse rounded-sm" />
+            <div className="h-3 w-full bg-surface-2 animate-pulse rounded-sm" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyNotice() {
+  return (
+    <div className="border border-border bg-surface rounded-sm p-8 text-center">
+      <div className="mono-label text-amber">NO_BILLS</div>
+      <p className="mt-2 text-sm text-muted-foreground">No bills match this filter.</p>
+    </div>
+  );
+}
+
+function ErrorNotice({ message }: { message: string }) {
+  return (
+    <div className="border border-status-red/50 bg-status-red/5 rounded-sm p-6">
+      <div className="mono-label text-status-red">QUERY_FAULT</div>
+      <p className="mt-2 text-sm text-foreground">Couldn't load bills from Supabase.</p>
+      <p className="mt-1 font-mono text-[11px] text-muted-foreground break-all">{message}</p>
+    </div>
+  );
+}
+
+function ConfigureNotice() {
+  return (
+    <div className="border border-border bg-surface rounded-sm p-6">
+      <div className="mono-label text-amber">SUPABASE // NOT_CONFIGURED</div>
+      <p className="mt-2 text-sm text-foreground">
+        Add your project credentials to <span className="font-mono text-cyan">.env.local</span> and
+        restart the dev server.
+      </p>
+    </div>
   );
 }

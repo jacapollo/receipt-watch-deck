@@ -54,7 +54,7 @@ const typeStyles: Record<ActionType, string> = {
 export function ActionTypeChip({ type }: { type: ActionType }) {
   return (
     <span
-      className={`inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 border rounded-[2px] ${typeStyles[type]}`}
+      className={`inline-flex items-center font-mono text-[11px] font-bold uppercase tracking-widest px-1.5 py-0.5 border rounded-[2px] ${typeStyles[type]}`}
     >
       {type}
     </span>
@@ -76,7 +76,7 @@ export function OfficeTag({
         ? "text-cyan"
         : "text-foreground";
   return (
-    <span className={`font-mono text-[10px] uppercase tracking-widest ${color}`}>
+    <span className={`font-mono text-[11px] uppercase tracking-widest ${color}`}>
       {level === "federal" ? "FED" : level === "state" ? "STATE" : "LOCAL"} · {text}
     </span>
   );
@@ -100,7 +100,7 @@ export function SourceTag({ source, url }: { source: string; url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-cyan border border-border hover:border-cyan px-1.5 py-0.5 rounded-[2px] transition"
+      className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground hover:text-cyan border border-border hover:border-cyan px-1.5 py-0.5 rounded-[2px] transition"
       onClick={(e) => e.stopPropagation()}
     >
       SRC · {source}
@@ -143,7 +143,7 @@ export function ActionCard({
           </div>
           <div className="mt-1 flex items-center gap-2">
             <ActionTypeChip type={action.type} />
-            <span className="font-mono text-[10px] text-muted-foreground tracking-wider">
+            <span className="font-mono text-[11px] text-muted-foreground tracking-wider">
               {formatStamp(action.timestamp)} · {formatTimeAgo(action.timestamp)}
             </span>
           </div>
@@ -199,7 +199,7 @@ export function StatTile({
         {value}
       </div>
       {sub && (
-        <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
           {sub}
         </div>
       )}
@@ -219,7 +219,7 @@ export function BillStatusPill({ status }: { status: BillStatus }) {
   };
   return (
     <span
-      className={`inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 border rounded-[2px] ${map[status]}`}
+      className={`inline-flex items-center font-mono text-[11px] font-bold uppercase tracking-widest px-1.5 py-0.5 border rounded-[2px] ${map[status]}`}
     >
       {status}
     </span>
@@ -231,7 +231,7 @@ export function ReportButton({ onClick }: { onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-status-red transition"
+      className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground hover:text-status-red transition"
     >
       <Flag className="h-3 w-3" />
       Report

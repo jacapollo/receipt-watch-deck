@@ -9,16 +9,25 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VotesRouteImport } from './routes/votes'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OfficialsRouteImport } from './routes/officials'
+import { Route as MoneyRouteImport } from './routes/money'
 import { Route as MapRouteImport } from './routes/map'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DiscussRouteImport } from './routes/discuss'
 import { Route as BillsRouteImport } from './routes/bills'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OfficialsIdRouteImport } from './routes/officials.$id'
 import { Route as DiscussIdRouteImport } from './routes/discuss.$id'
 
+const VotesRoute = VotesRouteImport.update({
+  id: '/votes',
+  path: '/votes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -29,9 +38,19 @@ const OfficialsRoute = OfficialsRouteImport.update({
   path: '/officials',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MoneyRoute = MoneyRouteImport.update({
+  id: '/money',
+  path: '/money',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MapRoute = MapRouteImport.update({
   id: '/map',
   path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedRoute = FeedRouteImport.update({
@@ -47,6 +66,11 @@ const DiscussRoute = DiscussRouteImport.update({
 const BillsRoute = BillsRouteImport.update({
   id: '/bills',
   path: '/bills',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -67,35 +91,47 @@ const DiscussIdRoute = DiscussIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/bills': typeof BillsRoute
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
+  '/login': typeof LoginRoute
   '/map': typeof MapRoute
+  '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/votes': typeof VotesRoute
   '/discuss/$id': typeof DiscussIdRoute
   '/officials/$id': typeof OfficialsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/bills': typeof BillsRoute
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
+  '/login': typeof LoginRoute
   '/map': typeof MapRoute
+  '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/votes': typeof VotesRoute
   '/discuss/$id': typeof DiscussIdRoute
   '/officials/$id': typeof OfficialsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/bills': typeof BillsRoute
   '/discuss': typeof DiscussRouteWithChildren
   '/feed': typeof FeedRoute
+  '/login': typeof LoginRoute
   '/map': typeof MapRoute
+  '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/votes': typeof VotesRoute
   '/discuss/$id': typeof DiscussIdRoute
   '/officials/$id': typeof OfficialsIdRoute
 }
@@ -103,50 +139,73 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/bills'
     | '/discuss'
     | '/feed'
+    | '/login'
     | '/map'
+    | '/money'
     | '/officials'
     | '/profile'
+    | '/votes'
     | '/discuss/$id'
     | '/officials/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/bills'
     | '/discuss'
     | '/feed'
+    | '/login'
     | '/map'
+    | '/money'
     | '/officials'
     | '/profile'
+    | '/votes'
     | '/discuss/$id'
     | '/officials/$id'
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/bills'
     | '/discuss'
     | '/feed'
+    | '/login'
     | '/map'
+    | '/money'
     | '/officials'
     | '/profile'
+    | '/votes'
     | '/discuss/$id'
     | '/officials/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   BillsRoute: typeof BillsRoute
   DiscussRoute: typeof DiscussRouteWithChildren
   FeedRoute: typeof FeedRoute
+  LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
+  MoneyRoute: typeof MoneyRoute
   OfficialsRoute: typeof OfficialsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
+  VotesRoute: typeof VotesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/votes': {
+      id: '/votes'
+      path: '/votes'
+      fullPath: '/votes'
+      preLoaderRoute: typeof VotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -161,11 +220,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfficialsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/money': {
+      id: '/money'
+      path: '/money'
+      fullPath: '/money'
+      preLoaderRoute: typeof MoneyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/map': {
       id: '/map'
       path: '/map'
       fullPath: '/map'
       preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed': {
@@ -187,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/bills'
       fullPath: '/bills'
       preLoaderRoute: typeof BillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -238,13 +318,27 @@ const OfficialsRouteWithChildren = OfficialsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   BillsRoute: BillsRoute,
   DiscussRoute: DiscussRouteWithChildren,
   FeedRoute: FeedRoute,
+  LoginRoute: LoginRoute,
   MapRoute: MapRoute,
+  MoneyRoute: MoneyRoute,
   OfficialsRoute: OfficialsRouteWithChildren,
   ProfileRoute: ProfileRoute,
+  VotesRoute: VotesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

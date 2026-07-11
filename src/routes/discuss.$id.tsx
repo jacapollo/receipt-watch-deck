@@ -60,14 +60,14 @@ function ThreadPage() {
                 {thread.tags.map((tg: string) => (
                   <span
                     key={tg}
-                    className="font-mono text-[10px] uppercase tracking-widest text-cyan border border-cyan/40 px-1.5 py-0.5 rounded-[2px]"
+                    className="font-mono text-[11px] uppercase tracking-widest text-cyan border border-cyan/40 px-1.5 py-0.5 rounded-[2px]"
                   >
                     {tg}
                   </span>
                 ))}
               </div>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{thread.body}</p>
-              <div className="mt-3 flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <div className="mt-3 flex items-center gap-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                 <span>@{thread.author}</span>
                 <span>{formatTimeAgo(thread.createdAt)}</span>
                 <span className="flex items-center gap-1">
@@ -129,7 +129,7 @@ function CommentItem({ comment, depth }: { comment: Comment; depth: number }) {
         marginLeft: depth * 12,
       }}
     >
-      <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+      <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground mb-1">
         <span className="text-foreground">@{comment.author}</span>
         <span>{formatTimeAgo(comment.createdAt)}</span>
         <span>▲ {comment.upvotes}</span>
