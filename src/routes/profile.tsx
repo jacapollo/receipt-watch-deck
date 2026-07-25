@@ -12,29 +12,46 @@ import {
 import { TrackButton } from "@/components/polysnitch/TrackButton";
 import { useAuth } from "@/lib/auth";
 import { supabaseConfigured } from "@/lib/supabase";
-import {
-  deriveBillStatus,
-  hostOf,
-  levelOf,
-  officialSlug,
-  toPartyCode,
-} from "@/lib/records";
+import { deriveBillStatus, hostOf, levelOf, officialSlug, toPartyCode } from "@/lib/records";
 import {
   fetchMyProfile,
   fetchOfficialsByIds,
   fetchBillsByIds,
   updateMyHandle,
   useFollows,
+  useSavedThreads,
   validateHandle,
   type ProfileRow,
 } from "@/lib/follows";
-import { LogIn, LogOut, Pencil, Check, X } from "lucide-react";
+import {
+  fetchMyActivity,
+  fetchThreadsByIds,
+  formatScope,
+  type ActivityAction,
+  type ActivityRow,
+  type ThreadRow,
+} from "@/lib/threads";
+import {
+  LogIn,
+  LogOut,
+  Pencil,
+  Check,
+  X,
+  MessageSquare,
+  Bookmark,
+  PenSquare,
+  Reply,
+  ArrowBigUp,
+} from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "Profile · PolySnitch" },
-      { name: "description", content: "Your anonymous handle and the officials and bills you track." },
+      {
+        name: "description",
+        content: "Your anonymous handle and the officials and bills you track.",
+      },
     ],
   }),
   component: ProfilePage,
@@ -122,12 +139,33 @@ function SignedIn({ userId, onSignOut }: { userId: string; onSignOut: () => void
     enabled: !follows.loading,
   });
 
+  const saved = useSavedThreads();
+  const savedIds = [...saved.threadIds];
+
+  const savedThreadsQuery = useQuery({
+    queryKey: ["saved-threads", savedIds.sort().join(",")],
+    queryFn: () => fetchThreadsByIds(savedIds),
+    enabled: !saved.loading,
+  });
+
+  const activityQuery = useQuery({
+    queryKey: ["my-activity", userId],
+    queryFn: () => fetchMyActivity(userId),
+    staleTime: 30_000,
+  });
+
   const officials = officialsQuery.data ?? [];
   const bills = billsQuery.data ?? [];
+  const savedThreads = savedThreadsQuery.data ?? [];
+  const activity = activityQuery.data ?? [];
 
   return (
     <>
-      <IdentityCard userId={userId} profile={profileQuery.data ?? null} loading={profileQuery.isLoading} />
+      <IdentityCard
+        userId={userId}
+        profile={profileQuery.data ?? null}
+        loading={profileQuery.isLoading}
+      />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Followed officials */}
@@ -138,11 +176,7 @@ function SignedIn({ userId, onSignOut }: { userId: string; onSignOut: () => void
           {follows.loading || officialsQuery.isLoading ? (
             <ListSkeleton />
           ) : officials.length === 0 ? (
-            <EmptyRow
-              body="Not tracking any officials yet."
-              to="/officials"
-              cta="Find officials"
-            />
+            <EmptyRow body="Not tracking any officials yet." to="/officials" cta="Find officials" />
           ) : (
             <ul className="space-y-1">
               {officials.map((o) => {
@@ -162,7 +196,7 @@ function SignedIn({ userId, onSignOut }: { userId: string; onSignOut: () => void
                         <div className="text-sm font-semibold truncate">{o.full_name}</div>
                         <OfficeTag
                           level={levelOf(o.level)}
-                          text={o.district ? `Dist ${o.district}` : o.office ?? "—"}
+                          text={o.district ? `Dist ${o.district}` : (o.office ?? "—")}
                         />
                       </div>
                     </Link>
@@ -199,6 +233,48 @@ function SignedIn({ userId, onSignOut }: { userId: string; onSignOut: () => void
                   </div>
                   <TrackButton kind="bill" id={b.id} size="sm" />
                 </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+
+      {/* Activity */}
+      <div className="mt-4">
+        <Panel>
+          <div className="mono-label text-amber mb-3 flex items-center gap-1.5">
+            <MessageSquare className="h-3 w-3" />
+            ACTIVITY · {activity.length}
+          </div>
+          {activityQuery.isLoading ? (
+            <ListSkeleton />
+          ) : activity.length === 0 ? (
+            <EmptyRow body="No thread activity yet." to="/discuss" cta="Browse discussions" />
+          ) : (
+            <ul className="space-y-2">
+              {activity.map((row) => (
+                <ActivityItem key={row.id} row={row} />
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+
+      {/* Saved threads */}
+      <div className="mt-4">
+        <Panel>
+          <div className="mono-label text-amber mb-3 flex items-center gap-1.5">
+            <Bookmark className="h-3 w-3" />
+            SAVED THREADS · {saved.threadIds.size}
+          </div>
+          {saved.loading || savedThreadsQuery.isLoading ? (
+            <ListSkeleton />
+          ) : savedThreads.length === 0 ? (
+            <EmptyRow body="No saved threads yet." to="/discuss" cta="Browse discussions" />
+          ) : (
+            <ul className="space-y-2">
+              {savedThreads.map((t) => (
+                <SavedThreadItem key={t.id} thread={t} />
               ))}
             </ul>
           )}
@@ -351,6 +427,87 @@ function IdentityCard({
       </div>
     </Panel>
   );
+}
+
+const ACTION_META: Record<ActivityAction, { label: string; icon: typeof PenSquare }> = {
+  authored: { label: "Started", icon: PenSquare },
+  commented: { label: "Replied", icon: Reply },
+  voted: { label: "Voted", icon: ArrowBigUp },
+};
+
+function ActivityItem({ row }: { row: ActivityRow }) {
+  return (
+    <li>
+      <Link
+        to="/discuss/$id"
+        params={{ id: row.id }}
+        search={{ scope: undefined }}
+        className="block border border-border rounded-sm p-3 hover:border-amber/50 hover:bg-surface-2 transition"
+      >
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          {row.actions.map((a) => {
+            const meta = ACTION_META[a];
+            const Icon = meta.icon;
+            return (
+              <span
+                key={a}
+                className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-amber border border-amber/40 px-1.5 py-0.5 rounded-[2px]"
+              >
+                <Icon className="h-2.5 w-2.5" />
+                {meta.label}
+              </span>
+            );
+          })}
+          <span className="mono-label text-cyan">{formatScope(row.scope)}</span>
+        </div>
+        <div className="text-sm font-semibold leading-snug line-clamp-2">{row.title}</div>
+        <div className="mt-1 flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          <span>{timeAgo(row.last_activity_at)}</span>
+          <span>
+            {row.comment_count} {row.comment_count === 1 ? "reply" : "replies"}
+          </span>
+        </div>
+      </Link>
+    </li>
+  );
+}
+
+function SavedThreadItem({ thread }: { thread: ThreadRow }) {
+  return (
+    <li>
+      <Link
+        to="/discuss/$id"
+        params={{ id: thread.id }}
+        search={{ scope: undefined }}
+        className="block border border-border rounded-sm p-3 hover:border-amber/50 hover:bg-surface-2 transition"
+      >
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          <span className="mono-label text-cyan">{formatScope(thread.scope)}</span>
+          <span className="mono-label text-muted-foreground">@{thread.handle}</span>
+        </div>
+        <div className="text-sm font-semibold leading-snug line-clamp-2">{thread.title}</div>
+        <div className="mt-1 flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          <span>{timeAgo(thread.created_at)}</span>
+          <span>
+            {thread.comment_count} {thread.comment_count === 1 ? "reply" : "replies"}
+          </span>
+        </div>
+      </Link>
+    </li>
+  );
+}
+
+function timeAgo(iso: string): string {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  if (s < 86400 * 30) return `${Math.floor(s / 86400)}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function Panel({ children }: { children: React.ReactNode }) {

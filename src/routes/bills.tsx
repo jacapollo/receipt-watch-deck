@@ -27,6 +27,7 @@ import {
 } from "@/lib/records";
 import { supabaseConfigured } from "@/lib/supabase";
 import { TrackButton } from "@/components/polysnitch/TrackButton";
+import { CommentThread } from "@/components/polysnitch/CommentThread";
 import { ChevronDown, ChevronRight, ChevronLeft, Search } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -147,7 +148,10 @@ function BillRowCard({
     <article className="border border-border bg-surface rounded-sm overflow-hidden">
       <div className="p-4 md:p-5">
         <div className="flex items-start gap-3">
-          <button onClick={onToggle} className="mt-1 text-muted-foreground hover:text-amber shrink-0">
+          <button
+            onClick={onToggle}
+            className="mt-1 text-muted-foreground hover:text-amber shrink-0"
+          >
             {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </button>
           <div className="min-w-0 flex-1">
@@ -162,7 +166,9 @@ function BillRowCard({
               <span className="font-mono text-cyan">{b.identifier}</span> — {b.title}
             </h3>
             {b.official_summary && (
-              <p className="mt-1 text-sm text-muted-foreground line-clamp-3">{b.official_summary}</p>
+              <p className="mt-1 text-sm text-muted-foreground line-clamp-3">
+                {b.official_summary}
+              </p>
             )}
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               {subjects.map((t) => (
@@ -216,18 +222,18 @@ function BillDetail({ billId }: { billId: string }) {
                     resolvedId ? "hover:border-amber" : ""
                   }`}
                 >
-                  <span className={`text-xs font-semibold ${resolvedId ? "" : "text-muted-foreground"}`}>
+                  <span
+                    className={`text-xs font-semibold ${resolvedId ? "" : "text-muted-foreground"}`}
+                  >
                     {s.raw_name}
                   </span>
-                  <span className="mono-label">{(s.classification ?? "sponsor").toUpperCase()}</span>
+                  <span className="mono-label">
+                    {(s.classification ?? "sponsor").toUpperCase()}
+                  </span>
                 </span>
               );
               return resolvedId ? (
-                <Link
-                  key={i}
-                  to="/officials/$id"
-                  params={{ id: officialSlug(resolvedId) }}
-                >
+                <Link key={i} to="/officials/$id" params={{ id: officialSlug(resolvedId) }}>
                   {chip}
                 </Link>
               ) : (
@@ -238,12 +244,16 @@ function BillDetail({ billId }: { billId: string }) {
         )}
       </div>
 
+      <CommentThread parentType="bill" parentId={billId} />
+
       <div>
         <div className="mono-label text-cyan mb-2">WHO VOTED HOW</div>
         {votesQuery.isLoading ? (
           <div className="h-24 bg-surface-2 animate-pulse rounded-sm" />
         ) : votes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No roll-call votes recorded for this bill.</p>
+          <p className="text-sm text-muted-foreground">
+            No roll-call votes recorded for this bill.
+          </p>
         ) : (
           <ul className="divide-y divide-border border border-border rounded-sm bg-surface max-h-96 overflow-auto">
             {votes.map((v) => {
@@ -253,7 +263,11 @@ function BillDetail({ billId }: { billId: string }) {
               return (
                 <li key={v.individual_vote_id} className="flex items-center gap-3 px-3 py-2">
                   <OfficialAvatar
-                    official={{ name: o?.full_name ?? "?", photoSeed: o?.ocd_person_id ?? "", party }}
+                    official={{
+                      name: o?.full_name ?? "?",
+                      photoSeed: o?.ocd_person_id ?? "",
+                      party,
+                    }}
                     size={28}
                   />
                   <div className="min-w-0 flex-1">
@@ -270,7 +284,10 @@ function BillDetail({ billId }: { billId: string }) {
                     )}
                     <div className="flex items-center gap-2">
                       <PartyDot party={party} />
-                      <OfficeTag level="state" text={o?.district ? `Dist ${o.district}` : o?.office ?? "—"} />
+                      <OfficeTag
+                        level="state"
+                        text={o?.district ? `Dist ${o.district}` : (o?.office ?? "—")}
+                      />
                     </div>
                   </div>
                   <span

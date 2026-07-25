@@ -35,7 +35,6 @@ function Landing() {
       <div className="fixed inset-0 z-0 bg-black/40" />
       <div className="fixed inset-0 hud-scanlines pointer-events-none z-[1] opacity-40" />
 
-
       {/* Top bar */}
       <header className="relative z-10 flex items-center justify-between px-6 md:px-10 py-5 border-b border-border/50">
         <div className="flex items-center gap-2">
@@ -45,11 +44,37 @@ function Landing() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-8 font-mono text-[12px] uppercase tracking-widest text-white font-bold">
-          <Link to="/feed" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Feed</Link>
-          <Link to="/map" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Map</Link>
-          <Link to="/officials" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Officials</Link>
-          <Link to="/bills" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Bills</Link>
-          <Link to="/discuss" className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors">Discuss</Link>
+          <Link
+            to="/feed"
+            className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors"
+          >
+            Feed
+          </Link>
+          <Link
+            to="/map"
+            className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors"
+          >
+            Map
+          </Link>
+          <Link
+            to="/officials"
+            className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors"
+          >
+            Officials
+          </Link>
+          <Link
+            to="/bills"
+            className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors"
+          >
+            Bills
+          </Link>
+          <Link
+            to="/discuss"
+            search={{ scope: undefined }}
+            className="px-2 py-1 rounded-sm border border-white/20 bg-white/5 hover:bg-amber hover:text-primary-foreground hover:border-amber transition-colors"
+          >
+            Discuss
+          </Link>
         </div>
         <Link
           to="/feed"
@@ -73,9 +98,9 @@ function Landing() {
         </h1>
 
         <p className="mt-6 max-w-2xl text-base md:text-lg text-white leading-relaxed font-medium drop-shadow">
-          A live operations dashboard for local, state, and federal officials —
-          built from <span className="font-bold">public records only</span>.
-          Their votes, their donors, their words. On the record.
+          A live operations dashboard for local, state, and federal officials — built from{" "}
+          <span className="font-bold">public records only</span>. Their votes, their donors, their
+          words. On the record.
         </p>
 
         {/* ZIP input */}
@@ -108,9 +133,21 @@ function Landing() {
         {/* Value cards */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: FileText, label: "PUBLIC RECORDS", body: "Votes, bills, statements — sourced and stamped." },
-            { icon: DollarSign, label: "REAL FUNDING", body: "Donors and sectors from official filings." },
-            { icon: ShieldCheck, label: "NO SPIN", body: "No press release laundering. The record itself." },
+            {
+              icon: FileText,
+              label: "PUBLIC RECORDS",
+              body: "Votes, bills, statements — sourced and stamped.",
+            },
+            {
+              icon: DollarSign,
+              label: "REAL FUNDING",
+              body: "Donors and sectors from official filings.",
+            },
+            {
+              icon: ShieldCheck,
+              label: "NO SPIN",
+              body: "No press release laundering. The record itself.",
+            },
           ].map((c) => (
             <div
               key={c.label}

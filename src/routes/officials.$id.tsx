@@ -9,7 +9,7 @@ import {
   StatTile,
   SourceTag,
 } from "@/components/polysnitch/Primitives";
-import { threads, formatTimeAgo } from "@/lib/mock-data";
+import { CommentThread } from "@/components/polysnitch/CommentThread";
 import {
   chamberLabel,
   electionLabel,
@@ -34,14 +34,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   CalendarClock,
-  ArrowBigUp,
-  ArrowBigDown,
-  MessageSquare,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { ReportButton } from "@/components/polysnitch/Primitives";
 import { TrackButton } from "@/components/polysnitch/TrackButton";
 
 export const Route = createFileRoute("/officials/$id")({
@@ -104,9 +100,6 @@ function DossierPage() {
   const votes = votesQuery.data ?? [];
   const hasNext = votes.length === PAGE_SIZE;
 
-  // Discussion stays on mock data; real ocd ids won't match, so this is empty.
-  const officialThreads = threads.filter((t) => t.relatedOfficialId === officialId);
-
   return (
     <AppShell>
       <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1400px] mx-auto">
@@ -142,6 +135,21 @@ function DossierPage() {
                 <OfficeTag level={level} text={official.office ?? "—"} />
                 <span className="mono-label">DIST · {official.district ?? "—"}</span>
                 <TrackButton kind="official" id={officialId} size="sm" />
+                {official.district && (
+                  <Link
+                    to="/discuss"
+                    search={{
+                      scope:
+                        official.level === "federal"
+                          ? `federal:US:${official.district}`
+                          : `state:${official.state ?? "FL"}:${official.district}`,
+                    }}
+                    className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground hover:text-amber border border-border hover:border-amber px-2 py-1 rounded-[2px] transition"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan shrink-0" />
+                    Discuss
+                  </Link>
+                )}
               </div>
 
               <dl className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
@@ -163,9 +171,24 @@ function DossierPage() {
 
         {/* Accountability snapshot — real vote-derived stats */}
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatTile label="VOTES CAST" value={stats ? stats.total.toLocaleString() : "—"} icon={Gavel} tone="amber" />
-          <StatTile label="YEA" value={stats ? stats.yes.toLocaleString() : "—"} icon={ThumbsUp} tone="green" />
-          <StatTile label="NAY" value={stats ? stats.no.toLocaleString() : "—"} icon={ThumbsDown} tone="red" />
+          <StatTile
+            label="VOTES CAST"
+            value={stats ? stats.total.toLocaleString() : "—"}
+            icon={Gavel}
+            tone="amber"
+          />
+          <StatTile
+            label="YEA"
+            value={stats ? stats.yes.toLocaleString() : "—"}
+            icon={ThumbsUp}
+            tone="green"
+          />
+          <StatTile
+            label="NAY"
+            value={stats ? stats.no.toLocaleString() : "—"}
+            icon={ThumbsDown}
+            tone="red"
+          />
           <StatTile
             label="LAST VOTE"
             value={stats?.lastVote ? stampOf(stats.lastVote) : "—"}
@@ -228,43 +251,7 @@ function DossierPage() {
 
         {tab === "funding" && <FundingTab officialId={officialId} />}
 
-        {tab === "discussion" && (
-          <div className="mt-5 space-y-3">
-            {officialThreads.length === 0 && (
-              <div className="border border-dashed border-border rounded-sm p-8 text-center">
-                <div className="mono-label text-amber">NO THREADS YET</div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Be the first to post about this official's public record.
-                </p>
-              </div>
-            )}
-            {officialThreads.map((t) => (
-              <article key={t.id} className="border border-border bg-surface rounded-sm p-4">
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center gap-0.5 shrink-0 font-mono">
-                    <ArrowBigUp className="h-4 w-4 text-muted-foreground hover:text-amber cursor-pointer" />
-                    <span className="text-xs font-bold">{t.upvotes - t.downvotes}</span>
-                    <ArrowBigDown className="h-4 w-4 text-muted-foreground hover:text-status-red cursor-pointer" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <Link to="/discuss/$id" params={{ id: t.id }} className="font-semibold hover:text-amber">
-                      {t.title}
-                    </Link>
-                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{t.body}</p>
-                    <div className="mt-2 flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                      <span>@{t.author}</span>
-                      <span>{formatTimeAgo(t.createdAt)}</span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" /> {t.comments.length}
-                      </span>
-                      <ReportButton />
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+        {tab === "discussion" && <CommentThread parentType="official" parentId={officialId} />}
 
         <div className="mt-10 pt-5 border-t border-border mono-label text-center">
           PolySnitch tracks the public record of public officials only.
@@ -294,7 +281,10 @@ function FundingTab({ officialId }: { officialId: string }) {
     return (
       <div className="mt-5 space-y-3">
         {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="border border-border bg-surface rounded-sm p-5 h-40 animate-pulse" />
+          <div
+            key={i}
+            className="border border-border bg-surface rounded-sm p-5 h-40 animate-pulse"
+          />
         ))}
       </div>
     );
@@ -346,7 +336,9 @@ function CampaignCard({ campaign: c }: { campaign: CampaignFinanceRow }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="font-mono font-bold text-foreground text-lg tabular-nums">{fmtMoney(c.total)}</div>
+          <div className="font-mono font-bold text-foreground text-lg tabular-nums">
+            {fmtMoney(c.total)}
+          </div>
           <div className="mono-label">{c.contribution_count.toLocaleString()} CONTRIBUTIONS</div>
         </div>
       </div>
@@ -372,7 +364,10 @@ function CampaignCard({ campaign: c }: { campaign: CampaignFinanceRow }) {
         ) : (
           <ul className="divide-y divide-border border border-border rounded-sm bg-surface">
             {donors.map((d) => (
-              <li key={`${d.donor_name}-${d.total}`} className="py-2 px-3 flex items-center justify-between gap-3">
+              <li
+                key={`${d.donor_name}-${d.total}`}
+                className="py-2 px-3 flex items-center justify-between gap-3"
+              >
                 <div className="min-w-0">
                   <div className="text-sm font-medium truncate">{d.donor_name}</div>
                   <div className="mono-label">
@@ -380,7 +375,9 @@ function CampaignCard({ campaign: c }: { campaign: CampaignFinanceRow }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-mono text-sm text-amber tabular-nums">{fmtMoney(d.total)}</span>
+                  <span className="font-mono text-sm text-amber tabular-nums">
+                    {fmtMoney(d.total)}
+                  </span>
                   <SourceTag source={hostOf(d.receipt_url)} url={d.receipt_url ?? "#"} />
                 </div>
               </li>
@@ -389,9 +386,19 @@ function CampaignCard({ campaign: c }: { campaign: CampaignFinanceRow }) {
         )}
         {(donorPage > 0 || hasNext) && (
           <div className="mt-3 flex items-center justify-between">
-            <PageButton dir="prev" disabled={donorPage === 0 || donorsQuery.isFetching} onClick={() => setDonorPage((p) => Math.max(0, p - 1))} />
-            <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">PAGE {donorPage + 1}</span>
-            <PageButton dir="next" disabled={!hasNext || donorsQuery.isFetching} onClick={() => setDonorPage((p) => p + 1)} />
+            <PageButton
+              dir="prev"
+              disabled={donorPage === 0 || donorsQuery.isFetching}
+              onClick={() => setDonorPage((p) => Math.max(0, p - 1))}
+            />
+            <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+              PAGE {donorPage + 1}
+            </span>
+            <PageButton
+              dir="next"
+              disabled={!hasNext || donorsQuery.isFetching}
+              onClick={() => setDonorPage((p) => p + 1)}
+            />
           </div>
         )}
       </div>
@@ -471,7 +478,15 @@ function VoteSkeleton() {
   );
 }
 
-function Notice({ label, body, tone = "amber" }: { label: string; body: string; tone?: "amber" | "red" }) {
+function Notice({
+  label,
+  body,
+  tone = "amber",
+}: {
+  label: string;
+  body: string;
+  tone?: "amber" | "red";
+}) {
   const color = tone === "red" ? "text-status-red" : "text-amber";
   return (
     <div className="border border-border bg-surface rounded-sm p-8 text-center">

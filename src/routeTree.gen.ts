@@ -13,6 +13,7 @@ import { Route as VotesRouteImport } from './routes/votes'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OfficialsRouteImport } from './routes/officials'
 import { Route as MoneyRouteImport } from './routes/money'
+import { Route as ModRouteImport } from './routes/mod'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -41,6 +42,11 @@ const OfficialsRoute = OfficialsRouteImport.update({
 const MoneyRoute = MoneyRouteImport.update({
   id: '/money',
   path: '/money',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModRoute = ModRouteImport.update({
+  id: '/mod',
+  path: '/mod',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MapRoute = MapRouteImport.update({
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
+  '/mod': typeof ModRoute
   '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
+  '/mod': typeof ModRoute
   '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/feed': typeof FeedRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
+  '/mod': typeof ModRoute
   '/money': typeof MoneyRoute
   '/officials': typeof OfficialsRouteWithChildren
   '/profile': typeof ProfileRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/login'
     | '/map'
+    | '/mod'
     | '/money'
     | '/officials'
     | '/profile'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/login'
     | '/map'
+    | '/mod'
     | '/money'
     | '/officials'
     | '/profile'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/login'
     | '/map'
+    | '/mod'
     | '/money'
     | '/officials'
     | '/profile'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRoute
   LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
+  ModRoute: typeof ModRoute
   MoneyRoute: typeof MoneyRoute
   OfficialsRoute: typeof OfficialsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       path: '/money'
       fullPath: '/money'
       preLoaderRoute: typeof MoneyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mod': {
+      id: '/mod'
+      path: '/mod'
+      fullPath: '/mod'
+      preLoaderRoute: typeof ModRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/map': {
@@ -324,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRoute,
   LoginRoute: LoginRoute,
   MapRoute: MapRoute,
+  ModRoute: ModRoute,
   MoneyRoute: MoneyRoute,
   OfficialsRoute: OfficialsRouteWithChildren,
   ProfileRoute: ProfileRoute,

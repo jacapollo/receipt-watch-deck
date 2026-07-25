@@ -1,8 +1,9 @@
-// User-owned data (Phase 2): the logged-in user's profile + follows. Everything
-// here runs through the anon/publishable client with the user's JWT attached, so
-// the owner-only RLS on `profiles` and `user_follows` is the real gate — a user
-// can only ever read or write their own rows. We still pass user_id / .eq(user_id)
-// explicitly so the intent is clear and inserts satisfy the WITH CHECK policy.
+// User-owned data (Phase 2+): the logged-in user's profile, follows, and
+// saved threads. Everything here runs through the anon/publishable client with
+// the user's JWT attached, so owner-only RLS on `profiles`, `user_follows`, and
+// `saved_threads` is the real gate — a user can only ever read or write their
+// own rows. We still pass user_id / .eq(user_id) explicitly so the intent is
+// clear and inserts satisfy the WITH CHECK policy.
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -83,7 +84,9 @@ export async function fetchMyFollows(userId: string): Promise<MyFollows> {
 
 async function followOfficial(userId: string, officialId: string) {
   const sb = requireSb();
-  const { error } = await sb.from("user_follows").insert({ user_id: userId, official_id: officialId });
+  const { error } = await sb
+    .from("user_follows")
+    .insert({ user_id: userId, official_id: officialId });
   if (error && error.code !== "23505") throw new Error(error.message); // ignore dup
 }
 async function unfollowOfficial(userId: string, officialId: string) {
@@ -226,5 +229,95 @@ export function useFollows() {
       toggleBill: (id: string, next: boolean) => mutation.mutate({ kind: "bill", id, next }),
     }),
     [userId, query.isLoading, follows, mutation],
+  );
+}
+
+// ---- saved threads ----------------------------------------------------------
+// Bookmark set that mirrors follows exactly: owner-scoped table, optimistic
+// toggle, per-user query key. Threads themselves are world-readable, so
+// hydration goes through fetchThreadsByIds() in @/lib/threads.
+
+export type SavedThreads = { threadIds: Set<string> };
+const EMPTY_SAVED: SavedThreads = { threadIds: new Set() };
+
+export async function fetchMySavedThreads(userId: string): Promise<SavedThreads> {
+  const sb = requireSb();
+  const { data, error } = await sb.from("saved_threads").select("thread_id").eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  const threadIds = new Set<string>();
+  for (const r of data ?? []) if (r.thread_id) threadIds.add(r.thread_id as string);
+  return { threadIds };
+}
+
+async function saveThread(userId: string, threadId: string) {
+  const sb = requireSb();
+  const { error } = await sb.from("saved_threads").insert({ user_id: userId, thread_id: threadId });
+  if (error && error.code !== "23505") throw new Error(error.message); // ignore dup
+}
+
+async function unsaveThread(userId: string, threadId: string) {
+  const sb = requireSb();
+  const { error } = await sb
+    .from("saved_threads")
+    .delete()
+    .eq("user_id", userId)
+    .eq("thread_id", threadId);
+  if (error) throw new Error(error.message);
+}
+
+export function useSavedThreads() {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+  const qc = useQueryClient();
+  const key = ["my-saved-threads", userId] as const;
+
+  const query = useQuery({
+    queryKey: key,
+    queryFn: () => fetchMySavedThreads(userId!),
+    enabled: !!userId,
+    staleTime: 30_000,
+  });
+
+  const saved = query.data ?? EMPTY_SAVED;
+
+  function optimisticToggle(id: string, next: boolean) {
+    qc.setQueryData<SavedThreads>(key, (old) => {
+      const base = old ?? EMPTY_SAVED;
+      const threadIds = new Set(base.threadIds);
+      if (next) threadIds.add(id);
+      else threadIds.delete(id);
+      return { threadIds };
+    });
+  }
+
+  const mutation = useMutation({
+    mutationFn: async (v: { id: string; next: boolean }) => {
+      if (!userId) throw new Error("Not signed in");
+      if (v.next) await saveThread(userId, v.id);
+      else await unsaveThread(userId, v.id);
+    },
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<SavedThreads>(key);
+      optimisticToggle(v.id, v.next);
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(key, ctx.prev);
+    },
+    onSettled: () => {
+      if (userId) qc.invalidateQueries({ queryKey: key });
+    },
+  });
+
+  return useMemo(
+    () => ({
+      signedIn: !!userId,
+      loading: query.isLoading && !!userId,
+      threadIds: saved.threadIds,
+      isSaved: (id: string) => saved.threadIds.has(id),
+      toggle: (id: string, next: boolean) => mutation.mutate({ id, next }),
+    }),
+    [userId, query.isLoading, saved, mutation],
   );
 }

@@ -17,18 +17,16 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 hud-grid">
       <div className="max-w-md text-center border border-border bg-surface p-8 rounded-md">
-        <div className="mono-label text-amber">ERR_404 // SIGNAL_LOST</div>
+        <div className="mono-label text-amber">404 // NOT FOUND</div>
         <h1 className="mt-3 text-6xl font-black tracking-tight text-foreground">404</h1>
-        <h2 className="mt-2 text-lg font-semibold text-foreground">Page off the record</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          We searched the public record. This page isn't in it.
-        </p>
+        <h2 className="mt-2 text-lg font-semibold text-foreground">Page not found</h2>
+        <p className="mt-2 text-sm text-muted-foreground">This page doesn't exist or has moved.</p>
         <div className="mt-6">
           <Link
-            to="/"
+            to="/feed"
             className="inline-flex items-center justify-center rounded-sm bg-amber px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground transition hover:brightness-110"
           >
-            Return to watchfloor
+            Back to dashboard
           </Link>
         </div>
       </div>
@@ -50,9 +48,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="mt-3 text-xl font-bold tracking-tight text-foreground">
           Something tripped a wire
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Try again, or head back to the feed.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Try again, or head back to the feed.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -91,8 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "PolySnitch — Track them the way they track you" },
       {
         property: "og:description",
-        content:
-          "An intelligence-dashboard for political accountability. Built on public records.",
+        content: "An intelligence-dashboard for political accountability. Built on public records.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
