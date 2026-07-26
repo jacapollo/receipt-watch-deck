@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { officialSlug } from "@/lib/records";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Gavel } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import {
@@ -24,8 +24,6 @@ export const Route = createFileRoute("/votes")({
   }),
   component: VotesPage,
 });
-
-// ---- real-data shapes (Supabase) -------------------------------------------
 
 type VoteRow = {
   individual_vote_id: string;
@@ -50,12 +48,10 @@ type VoteRow = {
   } | null;
 };
 
-const PAGE_SIZE = 25;
+type VotesPageResult = { rows: VoteRow[]; total: number };
 
-const VOTE_SELECT =
-  "individual_vote_id, option, motion_text, vote_result, vote_date, chamber, source, " +
-  "officials(ocd_person_id, full_name, party, office, district), " +
-  "bills(id, identifier, title, openstates_url)";
+const PAGE_SIZE = 25;
+const SEARCH_LIMIT = 100;
 
 const OPTION_FILTERS = [
   { id: "all", label: "All" },
@@ -65,9 +61,30 @@ const OPTION_FILTERS = [
   { id: "excused", label: "Excused" },
 ] as const;
 
-type OptionFilter = (typeof OPTION_FILTERS)[number]["id"];
+const CHAMBER_FILTERS = [
+  { id: "all", label: "All chambers" },
+  { id: "lower", label: "House" },
+  { id: "upper", label: "Senate" },
+] as const;
 
-// ---- helpers ----------------------------------------------------------------
+type OptionFilter = (typeof OPTION_FILTERS)[number]["id"];
+type ChamberFilter = (typeof CHAMBER_FILTERS)[number]["id"];
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
+
+function validateSearchSyntax(value: string): string | null {
+  if (/[%_(),:\\]/.test(value)) {
+    return "Use letters, numbers, spaces, periods, slashes, or hyphens only.";
+  }
+  return null;
+}
 
 function toPartyCode(party?: string | null): Party {
   const p = (party || "").toLowerCase();
@@ -85,7 +102,10 @@ function optionDisplay(option: string): { label: string; cls: string } {
     case "not voting":
       return { label: "N/V", cls: "text-muted-foreground border-border" };
     case "excused":
-      return { label: "EXCUSED", cls: "text-status-yellow border-status-yellow/50 bg-status-yellow/10" };
+      return {
+        label: "EXCUSED",
+        cls: "text-status-yellow border-status-yellow/50 bg-status-yellow/10",
+      };
     default:
       return { label: option.toUpperCase(), cls: "text-cyan border-cyan/50 bg-cyan/10" };
   }
@@ -100,6 +120,11 @@ function hostOf(url?: string | null): string {
   }
 }
 
+function toNumber(value: unknown): number {
+  const number = typeof value === "number" ? value : Number(value ?? 0);
+  return Number.isFinite(number) ? number : 0;
+}
+
 function stampOf(iso?: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -107,40 +132,76 @@ function stampOf(iso?: string | null): string {
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
 
-// ---- data hooks -------------------------------------------------------------
+function voteSelect(officialSearch: string, billSearch: string): string {
+  const officials = `officials${officialSearch ? "!inner" : ""}(ocd_person_id, full_name, party, office, district)`;
+  const bills = `bills${billSearch ? "!inner" : ""}(id, identifier, title, openstates_url)`;
+  return `individual_vote_id, option, motion_text, vote_result, vote_date, chamber, source, ${officials}, ${bills}`;
+}
 
-async function fetchVotesPage(page: number, option: OptionFilter): Promise<VoteRow[]> {
+async function fetchVotesPage(args: {
+  page: number;
+  option: OptionFilter;
+  chamber: ChamberFilter;
+  officialSearch: string;
+  billSearch: string;
+}): Promise<VotesPageResult> {
   if (!supabase) throw new Error("Supabase is not configured.");
+  const { page, option, chamber, officialSearch, billSearch } = args;
   const from = page * PAGE_SIZE;
-  let query = supabase
-    .from("votes")
-    .select(VOTE_SELECT)
-    .order("vote_date", { ascending: false })
-    .range(from, from + PAGE_SIZE - 1);
-  if (option !== "all") query = query.eq("option", option);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as VoteRow[];
+  let query = supabase.from("votes").select(voteSelect(officialSearch, billSearch));
+
+  if (option !== "all") query = query.eq("option", option);
+  if (chamber !== "all") query = query.eq("chamber", chamber);
+  if (officialSearch) query = query.ilike("officials.full_name", `%${officialSearch}%`);
+  if (billSearch) {
+    query = query.or(`identifier.ilike.%${billSearch}%,title.ilike.%${billSearch}%`, {
+      referencedTable: "bills",
+    });
+  }
+
+  const rowsPromise = query
+    .order("vote_date", { ascending: false, nullsFirst: false })
+    .range(from, from + PAGE_SIZE - 1);
+  const countPromise = supabase.rpc("count_votes_filtered", {
+    p_option: option === "all" ? null : option,
+    p_chamber: chamber === "all" ? null : chamber,
+    p_official_search: officialSearch || null,
+    p_bill_search: billSearch || null,
+  });
+
+  const [rowsResult, countResult] = await Promise.all([rowsPromise, countPromise]);
+  if (rowsResult.error) throw new Error(rowsResult.error.message);
+  if (countResult.error) throw new Error(countResult.error.message);
+  return {
+    rows: (rowsResult.data ?? []) as unknown as VoteRow[],
+    total: toNumber(countResult.data),
+  };
 }
 
 async function fetchEstimatedCount(table: string): Promise<number> {
   if (!supabase) return 0;
-  // head + estimated: reads the planner's row estimate, never scans 30k rows.
   const { count } = await supabase.from(table).select("*", { count: "estimated", head: true });
   return count ?? 0;
 }
 
-// ---- page -------------------------------------------------------------------
-
 function VotesPage() {
   const [page, setPage] = useState(0);
   const [option, setOption] = useState<OptionFilter>("all");
+  const [chamber, setChamber] = useState<ChamberFilter>("all");
+  const [officialInput, setOfficialInput] = useState("");
+  const [billInput, setBillInput] = useState("");
+  const debouncedOfficial = useDebouncedValue(officialInput.trim().slice(0, SEARCH_LIMIT), 300);
+  const debouncedBill = useDebouncedValue(billInput.trim().slice(0, SEARCH_LIMIT), 300);
+  const officialError = validateSearchSyntax(officialInput.trim());
+  const billError = validateSearchSyntax(billInput.trim());
+  const officialSearch = officialError ? "" : debouncedOfficial;
+  const billSearch = billError ? "" : debouncedBill;
 
   const votesQuery = useQuery({
-    queryKey: ["votes", page, option],
-    queryFn: () => fetchVotesPage(page, option),
-    enabled: supabaseConfigured,
+    queryKey: ["votes", page, option, chamber, officialSearch, billSearch],
+    queryFn: () => fetchVotesPage({ page, option, chamber, officialSearch, billSearch }),
+    enabled: supabaseConfigured && !officialError && !billError,
     placeholderData: keepPreviousData,
   });
 
@@ -155,8 +216,19 @@ function VotesPage() {
     staleTime: Infinity,
   });
 
-  const rows = votesQuery.data ?? [];
-  const hasNext = rows.length === PAGE_SIZE;
+  const rows = votesQuery.data?.rows ?? [];
+  const total = votesQuery.data?.total ?? 0;
+  const maxPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
+  const displayPage = Math.min(page, maxPage);
+
+  useEffect(() => {
+    if (page > maxPage && !votesQuery.isPlaceholderData) setPage(maxPage);
+  }, [maxPage, page, votesQuery.isPlaceholderData]);
+
+  const setFilter = <T,>(setter: (value: T) => void, value: T) => {
+    setter(value);
+    setPage(0);
+  };
 
   return (
     <AppShell>
@@ -166,7 +238,9 @@ function VotesPage() {
           title="Votes"
           right={
             <span className="mono-label hidden md:inline">
-              {countsQuery.data ? `${countsQuery.data.votes.toLocaleString()} ON RECORD` : "LOADING…"}
+              {countsQuery.data
+                ? `${countsQuery.data.votes.toLocaleString()} ON RECORD`
+                : "LOADING…"}
             </span>
           }
         />
@@ -197,58 +271,107 @@ function VotesPage() {
               />
             </div>
 
-            {/* option filter */}
-            <div className="flex items-center gap-3 flex-wrap mb-5">
-              <span className="mono-label mr-1">FILTER</span>
-              <div className="flex border border-border bg-surface rounded-sm overflow-hidden">
-                {OPTION_FILTERS.map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={() => {
-                      setOption(o.id);
-                      setPage(0);
-                    }}
-                    className={`px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest transition ${
-                      option === o.id
-                        ? "bg-amber text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-surface-2"
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
+            <div className="border border-border bg-surface rounded-sm p-3 md:p-4 mb-5 space-y-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="mono-label mr-1">FILTER</span>
+                <select
+                  aria-label="Chamber"
+                  value={chamber}
+                  onChange={(event) => setFilter(setChamber, event.target.value as ChamberFilter)}
+                  className="h-8 border border-border bg-background rounded-sm px-2 font-mono text-[11px] uppercase tracking-wider text-foreground"
+                >
+                  {CHAMBER_FILTERS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+                <div
+                  role="group"
+                  aria-label="Vote option"
+                  className="flex border border-border bg-background rounded-sm overflow-hidden"
+                >
+                  {OPTION_FILTERS.map((item) => (
+                    <button
+                      key={item.id}
+                      aria-pressed={option === item.id}
+                      onClick={() => setFilter(setOption, item.id)}
+                      className={`px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest transition ${option === item.id ? "bg-amber text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-surface-2"}`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                <span className="mono-label md:ml-auto text-amber">
+                  {votesQuery.data ? `${total.toLocaleString()} VOTES` : "COUNTING…"}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label className="space-y-1">
+                  <span className="mono-label">OFFICIAL</span>
+                  <input
+                    type="search"
+                    value={officialInput}
+                    maxLength={SEARCH_LIMIT}
+                    aria-invalid={!!officialError}
+                    onChange={(event) => setFilter(setOfficialInput, event.target.value)}
+                    placeholder="Search official name"
+                    className={`w-full h-9 border bg-background rounded-sm px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none ${officialError ? "border-status-red" : "border-border focus:border-amber"}`}
+                  />
+                  {officialError && (
+                    <span className="block font-mono text-[11px] text-status-red">
+                      {officialError}
+                    </span>
+                  )}
+                </label>
+                <label className="space-y-1">
+                  <span className="mono-label">BILL</span>
+                  <input
+                    type="search"
+                    value={billInput}
+                    maxLength={SEARCH_LIMIT}
+                    aria-invalid={!!billError}
+                    onChange={(event) => setFilter(setBillInput, event.target.value)}
+                    placeholder="Search identifier or title"
+                    className={`w-full h-9 border bg-background rounded-sm px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none ${billError ? "border-status-red" : "border-border focus:border-amber"}`}
+                  />
+                  {billError && (
+                    <span className="block font-mono text-[11px] text-status-red">{billError}</span>
+                  )}
+                </label>
               </div>
             </div>
 
             {votesQuery.isError ? (
               <ErrorNotice message={(votesQuery.error as Error).message} />
             ) : votesQuery.isLoading ? (
-              <SkeletonList />
+              <ListSkeleton />
+            ) : officialError || billError ? (
+              <EmptyRow body="Correct the search input to run this query." />
             ) : rows.length === 0 ? (
-              <EmptyNotice />
+              <EmptyRow body="No votes match these filters." />
             ) : (
               <div className="space-y-3">
-                {rows.map((v) => (
-                  <VoteCard key={v.individual_vote_id} vote={v} />
+                {rows.map((vote) => (
+                  <VoteCard key={vote.individual_vote_id} vote={vote} />
                 ))}
               </div>
             )}
 
-            {/* pagination */}
             <div className="mt-6 flex items-center justify-between gap-3">
               <PageButton
                 dir="prev"
                 disabled={page === 0 || votesQuery.isFetching}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                onClick={() => setPage((value) => Math.max(0, value - 1))}
               />
               <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                PAGE {page + 1}
-                {votesQuery.isFetching && page > 0 ? " · loading…" : ""}
+                PAGE {displayPage + 1} OF {maxPage + 1}
+                {votesQuery.isFetching && !votesQuery.isLoading ? " · loading…" : ""}
               </span>
               <PageButton
                 dir="next"
-                disabled={!hasNext || votesQuery.isFetching}
-                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= maxPage || votesQuery.isFetching}
+                onClick={() => setPage((value) => Math.min(maxPage, value + 1))}
               />
             </div>
           </>
@@ -258,57 +381,63 @@ function VotesPage() {
   );
 }
 
-// ---- pieces -----------------------------------------------------------------
-
 function VoteCard({ vote }: { vote: VoteRow }) {
-  const o = vote.officials;
-  const b = vote.bills;
-  const opt = optionDisplay(vote.option);
-  const party = toPartyCode(o?.party);
+  const official = vote.officials;
+  const bill = vote.bills;
+  const display = optionDisplay(vote.option);
+  const party = toPartyCode(official?.party);
 
   return (
     <article className="group border border-border bg-surface hover:border-amber/40 hover:bg-surface-2/60 transition rounded-sm p-4 md:p-5">
       <div className="flex items-start gap-3">
         <OfficialAvatar
-          official={{ name: o?.full_name ?? "Unknown", photoSeed: o?.ocd_person_id ?? "", party }}
+          official={{
+            name: official?.full_name ?? "Unknown",
+            photoSeed: official?.ocd_person_id ?? "",
+            party,
+          }}
           size={44}
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
-            {o ? (
+            {official ? (
               <Link
                 to="/officials/$id"
-                params={{ id: officialSlug(o.ocd_person_id) }}
+                params={{ id: officialSlug(official.ocd_person_id) }}
                 className="font-semibold text-foreground hover:text-amber truncate"
               >
-                {o.full_name}
+                {official.full_name}
               </Link>
             ) : (
               <span className="font-semibold text-foreground truncate">Unknown official</span>
             )}
             <PartyDot party={party} />
-            <OfficeTag level="state" text={o?.district ? `FL · ${o.office ?? "—"} · Dist ${o.district}` : o?.office ?? "—"} />
+            <OfficeTag
+              level="state"
+              text={
+                official?.district
+                  ? `FL · ${official.office ?? "—"} · Dist ${official.district}`
+                  : (official?.office ?? "—")
+              }
+            />
           </div>
-
           <div className="mt-1 flex items-center gap-2 flex-wrap">
             <span
-              className={`inline-flex items-center font-mono text-[11px] font-bold uppercase tracking-widest px-1.5 py-0.5 border rounded-[2px] ${opt.cls}`}
+              className={`inline-flex items-center font-mono text-[11px] font-bold uppercase tracking-widest px-1.5 py-0.5 border rounded-[2px] ${display.cls}`}
             >
-              {opt.label}
+              {display.label}
             </span>
             <span className="font-mono text-[11px] text-muted-foreground tracking-wider">
               {stampOf(vote.vote_date)}
               {vote.motion_text ? ` · ${vote.motion_text}` : ""}
             </span>
           </div>
-
-          {b && (
+          {bill && (
             <p className="mt-2 text-sm text-foreground leading-snug">
-              <span className="font-mono text-cyan font-semibold">{b.identifier}</span>{" "}
-              <span className="text-muted-foreground">— {b.title}</span>
+              <span className="font-mono text-cyan font-semibold">{bill.identifier}</span>{" "}
+              <span className="text-muted-foreground">— {bill.title}</span>
             </p>
           )}
-
           <div className="mt-3 flex items-center gap-2 flex-wrap">
             <SourceTag source={hostOf(vote.source?.url)} url={vote.source?.url ?? "#"} />
             {vote.vote_result && (
@@ -337,6 +466,7 @@ function PageButton({
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-label={dir === "prev" ? "Previous page" : "Next page"}
       className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest px-3 py-2 border border-border rounded-sm text-foreground transition hover:border-amber hover:text-amber disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:text-foreground"
     >
       {dir === "prev" && <Icon className="h-3.5 w-3.5" />}
@@ -346,30 +476,20 @@ function PageButton({
   );
 }
 
-function SkeletonList() {
+function ListSkeleton() {
   return (
-    <div className="space-y-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="border border-border bg-surface rounded-sm p-4 md:p-5">
-          <div className="flex items-start gap-3">
-            <div className="h-11 w-11 rounded-sm bg-surface-2 animate-pulse" />
-            <div className="flex-1 space-y-2">
-              <div className="h-3 w-1/3 bg-surface-2 animate-pulse rounded-sm" />
-              <div className="h-3 w-1/4 bg-surface-2 animate-pulse rounded-sm" />
-              <div className="h-3 w-2/3 bg-surface-2 animate-pulse rounded-sm" />
-            </div>
-          </div>
-        </div>
+    <div className="space-y-2">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div key={index} className="h-24 bg-surface-2 animate-pulse rounded-sm" />
       ))}
     </div>
   );
 }
 
-function EmptyNotice() {
+function EmptyRow({ body }: { body: string }) {
   return (
-    <div className="border border-border bg-surface rounded-sm p-8 text-center">
-      <div className="mono-label text-amber">NO_RECORDS</div>
-      <p className="mt-2 text-sm text-muted-foreground">No votes match this filter.</p>
+    <div className="border border-dashed border-border rounded-sm p-5 text-center">
+      <p className="text-sm text-muted-foreground">{body}</p>
     </div>
   );
 }
@@ -392,10 +512,7 @@ function ConfigureNotice() {
         The Votes lens reads live data from Supabase. Add your project credentials to{" "}
         <span className="font-mono text-cyan">.env.local</span> and restart the dev server:
       </p>
-      <pre className="mt-3 text-[12px] font-mono bg-background border border-border rounded-sm p-3 overflow-x-auto text-muted-foreground">
-        {`VITE_SUPABASE_URL=https://<your-project>.supabase.co
-VITE_SUPABASE_ANON_KEY=<your-anon-or-publishable-key>`}
-      </pre>
+      <pre className="mt-3 text-[12px] font-mono bg-background border border-border rounded-sm p-3 overflow-x-auto text-muted-foreground">{`VITE_SUPABASE_URL=https://<your-project>.supabase.co\nVITE_SUPABASE_ANON_KEY=<your-anon-or-publishable-key>`}</pre>
     </div>
   );
 }

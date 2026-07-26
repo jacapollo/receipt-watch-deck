@@ -17,6 +17,9 @@ dist-ssr
 *.local
 *.local.save
 
+# Hermes local scratch (plans/handoffs)
+.hermes/
+
 # Supabase
 supabase/.temp/
 
