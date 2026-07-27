@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Building2,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Landmark,
@@ -35,7 +36,8 @@ export const Route = createFileRoute("/money")({
       { title: "Money · PolySnitch" },
       {
         name: "description",
-        content: "Campaign money, straight from the filings — outside donors vs self-funding.",
+        content:
+          "Campaign money, straight from the filings — donor-funded receipts vs self-funding.",
       },
     ],
   }),
@@ -271,10 +273,48 @@ async function fetchDonorPage(
   return { rows, total: countResult.count ?? 0 };
 }
 
+// Shape returned by public.campaign_top_donors(uuid, integer). Numeric columns
+// arrive as strings over the wire, so callers route them through toNumber().
+type TopDonorRow = {
+  donor_name: string;
+  total_amount: number;
+  contribution_count: number;
+};
+
+async function fetchCampaignTopDonors(campaignId: string): Promise<TopDonorRow[]> {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.rpc("campaign_top_donors", {
+    p_campaign_id: campaignId,
+    p_limit: 10,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as TopDonorRow[]).map((row) => ({
+    donor_name: row.donor_name,
+    total_amount: toNumber(row.total_amount),
+    contribution_count: toNumber(row.contribution_count),
+  }));
+}
+
+type DonorIntegrity = "PROCESSOR" | "AGGREGATE";
+
+// Deterministic conduit/aggregate flag — NOT entity resolution. Case- and
+// whitespace-normalized substring match only; AGGREGATE wins if both hit.
+function donorIntegrity(name: string): DonorIntegrity | null {
+  const normalized = name.toUpperCase().replace(/\s+/g, " ").trim();
+  if (normalized.includes("UNITEMIZED")) return "AGGREGATE";
+  if (
+    normalized.includes("ACTBLUE") ||
+    normalized.includes("ACT BLUE") ||
+    normalized.includes("WINRED")
+  )
+    return "PROCESSOR";
+  return null;
+}
+
 const MODE_COPY: Record<MoneyMode, { label: string; hint: string; countLabel: string }> = {
   leaderboard: {
     label: "Leaderboard",
-    hint: "Aggregate campaign totals — every filed campaign, ranked by outside donations or self-funding.",
+    hint: "Aggregate campaign totals — every filed campaign, ranked by donor-funded receipts or self-funding.",
     countLabel: "CAMPAIGNS",
   },
   donors: {
@@ -292,6 +332,7 @@ function MoneyPage() {
   const [office, setOffice] = useState("");
   const [election, setElection] = useState("");
   const [donorInput, setDonorInput] = useState("");
+  const [expandedCampaignId, setExpandedCampaignId] = useState<string | null>(null);
   const donorSearch = useDebouncedValue(
     donorInput.trim().slice(0, DONOR_MAX_CHARS),
     DONOR_DEBOUNCE_MS,
@@ -339,6 +380,12 @@ function MoneyPage() {
   useEffect(() => {
     if (page > maxPage && !activeQuery.isPlaceholderData) setPage(maxPage);
   }, [activeQuery.isPlaceholderData, maxPage, page]);
+
+  // Collapse any expanded leaderboard row when the underlying list changes so
+  // details never linger over a stale campaign.
+  useEffect(() => {
+    setExpandedCampaignId(null);
+  }, [mode, page, board, party, office, election]);
 
   const update = <T,>(setter: (value: T) => void, value: T) => {
     setter(value);
@@ -480,7 +527,7 @@ function MoneyPage() {
                   >
                     {(
                       [
-                        ["outside", "Top outside money"],
+                        ["outside", "Top donor-funded"],
                         ["self", "Top self-funders"],
                       ] as [Board, string][]
                     ).map(([id, label]) => (
@@ -540,6 +587,12 @@ function MoneyPage() {
                       campaign={campaign}
                       board={board}
                       official={roster.get(campaign.official_id)}
+                      isExpanded={expandedCampaignId === campaign.campaign_id}
+                      onToggle={() =>
+                        setExpandedCampaignId((current) =>
+                          current === campaign.campaign_id ? null : campaign.campaign_id,
+                        )
+                      }
                     />
                   ))}
                 </ul>
@@ -616,58 +669,285 @@ function LeaderRow({
   campaign,
   board,
   official,
+  isExpanded,
+  onToggle,
 }: {
   rank: number;
   campaign: CampaignFinanceRow;
   board: Board;
   official?: RosterEntry;
+  isExpanded: boolean;
+  onToggle: () => void;
 }) {
   const amount = board === "outside" ? campaign.outside : campaign.self_funded;
   const party = toPartyCode(official?.party ?? campaign.party_as_filed);
+  const panelId = `money-sources-${campaign.campaign_id}`;
   return (
-    <li className="flex items-center gap-3 px-3 py-2.5">
-      <span className="font-mono text-[11px] text-muted-foreground w-6 text-right shrink-0">
-        {rank}
-      </span>
-      <OfficialAvatar
-        official={{ name: official?.full_name ?? "?", photoSeed: campaign.official_id, party }}
-        size={32}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link
-            to="/officials/$id"
-            params={{ id: officialSlug(campaign.official_id) }}
-            className="text-sm font-medium hover:text-amber truncate"
-          >
-            {official?.full_name ?? campaign.official_id}
-          </Link>
-          <PartyDot party={party} />
-          <OfficeTag
-            level="state"
-            text={
-              campaign.office_as_filed ?? (official?.district ? `Dist ${official.district}` : "—")
-            }
-          />
+    <li>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
+        <span className="font-mono text-[11px] text-muted-foreground w-6 text-right shrink-0">
+          {rank}
+        </span>
+        <OfficialAvatar
+          official={{ name: official?.full_name ?? "?", photoSeed: campaign.official_id, party }}
+          size={32}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              to="/officials/$id"
+              params={{ id: officialSlug(campaign.official_id) }}
+              className="text-sm font-medium hover:text-amber truncate focus:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-[2px]"
+            >
+              {official?.full_name ?? campaign.official_id}
+            </Link>
+            <PartyDot party={party} />
+            <OfficeTag
+              level="state"
+              text={
+                campaign.office_as_filed ?? (official?.district ? `Dist ${official.district}` : "—")
+              }
+            />
+          </div>
+          <div className="mono-label">
+            {electionLabel(campaign.election_id)} · {campaign.contribution_count.toLocaleString()}{" "}
+            contributions
+          </div>
         </div>
-        <div className="mono-label">
-          {electionLabel(campaign.election_id)} · {campaign.contribution_count.toLocaleString()}{" "}
-          contributions
+        <div className="flex items-center gap-3 shrink-0 basis-full justify-end sm:basis-auto">
+          <div className="text-right">
+            <div
+              className={`font-mono font-bold tabular-nums ${board === "self" ? "text-status-yellow" : "text-cyan"}`}
+            >
+              {fmtMoney(amount)}
+            </div>
+            <div className="mono-label">
+              {board === "outside"
+                ? `+${fmtMoney(campaign.self_funded)} self`
+                : `+${fmtMoney(campaign.outside)} donor-funded`}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={isExpanded}
+            aria-controls={panelId}
+            className="inline-flex items-center gap-1 shrink-0 font-mono text-[11px] uppercase tracking-widest px-2 py-1 border border-border rounded-sm text-muted-foreground hover:border-amber hover:text-amber transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <span>{isExpanded ? "Hide" : "Sources"}</span>
+            <ChevronDown
+              className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          </button>
         </div>
       </div>
-      <div className="text-right shrink-0">
+      {isExpanded && <ExpandedPanel id={panelId} campaign={campaign} />}
+    </li>
+  );
+}
+
+function ExpandedPanel({ id, campaign }: { id: string; campaign: CampaignFinanceRow }) {
+  const donorsQuery = useQuery({
+    queryKey: ["money", "top-donors", campaign.campaign_id],
+    queryFn: () => fetchCampaignTopDonors(campaign.campaign_id),
+    enabled: supabaseConfigured,
+    staleTime: 5 * 60_000,
+  });
+
+  return (
+    <div
+      id={id}
+      className="border-t border-border bg-surface-2 px-3 py-4 md:px-4 md:py-5 space-y-5"
+    >
+      <TopSources query={donorsQuery} />
+      <FundingSplit campaign={campaign} />
+    </div>
+  );
+}
+
+function TopSources({ query }: { query: ReturnType<typeof useQuery<TopDonorRow[], Error>> }) {
+  const rows = query.data ?? [];
+  const max = rows.reduce((peak, row) => Math.max(peak, row.total_amount), 0);
+
+  return (
+    <section aria-labelledby="top-sources-heading" className="space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h3 id="top-sources-heading" className="mono-label text-amber">
+          TOP SOURCES
+        </h3>
+        <span className="mono-label text-muted-foreground">RECEIPTS · UP TO 10</span>
+      </div>
+
+      {query.isLoading ? (
+        <div className="space-y-1.5" aria-live="polite" aria-busy="true">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="h-9 bg-background animate-pulse rounded-sm" />
+          ))}
+        </div>
+      ) : query.error ? (
+        <div className="border border-status-red/50 bg-status-red/5 rounded-sm p-3">
+          <div className="mono-label text-status-red">SOURCES_FAULT</div>
+          <p className="mt-1 font-mono text-[11px] text-muted-foreground break-all">
+            {(query.error as Error).message}
+          </p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="border border-dashed border-border rounded-sm p-4 text-center">
+          <p className="text-xs text-muted-foreground">
+            No itemized receipts filed for this campaign yet.
+          </p>
+        </div>
+      ) : (
+        <>
+          <ol className="space-y-1.5">
+            {rows.map((row, index) => (
+              <TopDonor
+                key={`${index}-${row.donor_name}`}
+                rank={index + 1}
+                row={row}
+                maxAmount={max}
+              />
+            ))}
+          </ol>
+          <p className="font-mono text-[11px] text-muted-foreground leading-snug">
+            Processors are pass-through conduits and aggregates combine many underlying receipts.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
+function TopDonor({ rank, row, maxAmount }: { rank: number; row: TopDonorRow; maxAmount: number }) {
+  const integrity = donorIntegrity(row.donor_name);
+  const share = maxAmount > 0 ? (row.total_amount / maxAmount) * 100 : 0;
+  const width = Math.max(0, Math.min(100, share));
+  return (
+    <li className="border border-border bg-surface rounded-sm px-2.5 py-2">
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-[11px] text-muted-foreground w-5 text-right shrink-0 tabular-nums">
+          {rank}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              title={row.donor_name}
+              className="text-sm text-foreground truncate max-w-full break-words"
+            >
+              {row.donor_name}
+            </span>
+            {integrity && <IntegrityBadge kind={integrity} />}
+          </div>
+          <div className="mono-label mt-0.5">
+            {row.contribution_count.toLocaleString()} receipts
+          </div>
+        </div>
         <div
-          className={`font-mono font-bold tabular-nums ${board === "self" ? "text-status-yellow" : "text-cyan"}`}
+          className="font-mono font-bold tabular-nums text-cyan text-sm shrink-0"
+          aria-label={`Net ${fmtMoney(row.total_amount)}`}
         >
-          {fmtMoney(amount)}
+          {fmtMoney(row.total_amount)}
         </div>
-        <div className="mono-label">
-          {board === "outside"
-            ? `+${fmtMoney(campaign.self_funded)} self`
-            : `+${fmtMoney(campaign.outside)} outside`}
-        </div>
+      </div>
+      <div
+        role="progressbar"
+        aria-label={`${row.donor_name} share of top donor`}
+        aria-valuenow={Math.round(width)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="mt-2 h-1.5 bg-background rounded-[2px] overflow-hidden"
+      >
+        <div className="h-full bg-cyan" style={{ width: `${width}%` }} />
       </div>
     </li>
+  );
+}
+
+function IntegrityBadge({ kind }: { kind: DonorIntegrity }) {
+  return (
+    <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-widest border border-border bg-surface-2 text-muted-foreground px-1.5 py-0.5 rounded-[2px]">
+      {kind}
+    </span>
+  );
+}
+
+function FundingSplit({ campaign }: { campaign: CampaignFinanceRow }) {
+  const self = Math.max(0, campaign.self_funded);
+  const outside = Math.max(0, campaign.outside);
+  const denom = self + outside;
+  const selfPct = denom > 0 ? (self / denom) * 100 : 0;
+  const outsidePct = denom > 0 ? (outside / denom) * 100 : 0;
+  const selfBar = Math.max(0, Math.min(100, selfPct));
+  const outsideBar = Math.max(0, Math.min(100, outsidePct));
+  const showSelfBadge = selfPct >= 10;
+
+  return (
+    <section aria-labelledby="funding-split-heading" className="space-y-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h3 id="funding-split-heading" className="mono-label text-amber">
+          FUNDING SPLIT
+        </h3>
+        {showSelfBadge && (
+          <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-widest border border-amber/50 bg-amber/10 text-amber px-1.5 py-0.5 rounded-[2px]">
+            SELF-FUNDING ≥ 10%
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <SplitStat
+          label="SELF-FUNDED"
+          tone="amber"
+          amount={campaign.self_funded}
+          percent={selfPct}
+        />
+        <SplitStat
+          label="DONOR-FUNDED"
+          tone="cyan"
+          amount={campaign.outside}
+          percent={outsidePct}
+        />
+      </div>
+      <div
+        role="img"
+        aria-label={
+          denom > 0
+            ? `Self-funded ${selfPct.toFixed(1)} percent, donor-funded ${outsidePct.toFixed(1)} percent`
+            : "No funding recorded"
+        }
+        className="flex h-2 bg-background rounded-[2px] overflow-hidden"
+      >
+        <div className="h-full bg-amber" style={{ width: `${selfBar}%` }} />
+        <div className="h-full bg-cyan" style={{ width: `${outsideBar}%` }} />
+      </div>
+    </section>
+  );
+}
+
+function SplitStat({
+  label,
+  tone,
+  amount,
+  percent,
+}: {
+  label: string;
+  tone: "amber" | "cyan";
+  amount: number;
+  percent: number;
+}) {
+  const toneClass = tone === "amber" ? "text-amber" : "text-cyan";
+  return (
+    <div className="border border-border bg-surface rounded-sm px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="mono-label">{label}</span>
+        <span className={`font-mono text-[11px] tabular-nums ${toneClass}`}>
+          {percent.toFixed(1)}%
+        </span>
+      </div>
+      <div className={`mt-1 font-mono font-bold tabular-nums text-sm ${toneClass}`}>
+        {fmtMoney(amount)}
+      </div>
+    </div>
   );
 }
 
