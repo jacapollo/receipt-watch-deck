@@ -273,7 +273,7 @@ function DiscussPage() {
                 "Discuss public actions of public officials only.",
                 "No harassment, slurs, or threats — ever.",
                 "No doxxing. No home addresses, family, or private individuals.",
-                "Source your claims. Receipts over vibes.",
+                "Source your claims. Receipts over opinions.",
                 "No links. Cite sources by name.",
                 "Reports go to mods within 24h. Repeat offenders are removed.",
               ].map((g, i) => (
