@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -77,6 +77,7 @@ type Tab = "activity" | "funding" | "discussion";
 
 function DossierPage() {
   const { official } = Route.useLoaderData();
+  const router = useRouter();
   const officialId = official.ocd_person_id;
   const [tab, setTab] = useState<Tab>("activity");
   const [votePage, setVotePage] = useState(0);
@@ -103,12 +104,19 @@ function DossierPage() {
   return (
     <AppShell>
       <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1400px] mx-auto">
-        <Link
-          to="/officials"
+        <button
+          type="button"
+          onClick={() => {
+            if (router.history.canGoBack()) {
+              router.history.back();
+            } else {
+              router.navigate({ to: "/officials" });
+            }
+          }}
           className="inline-flex items-center gap-1.5 mono-label text-muted-foreground hover:text-amber mb-4"
         >
-          <ArrowLeft className="h-3 w-3" /> ROSTER
-        </Link>
+          <ArrowLeft className="h-3 w-3" /> BACK
+        </button>
 
         {/* Case file header */}
         <div className="border border-border bg-surface rounded-sm p-5 md:p-6 relative overflow-hidden">
